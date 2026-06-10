@@ -1,0 +1,20 @@
+[
+  {
+    "type": "Atmosphere",
+    "city": "Miami",
+    "reason": "High-energy knockout atmosphere",
+    "match": "Quarter Final"
+  },
+  {
+    "type": "Budget",
+    "city": "Kansas City",
+    "reason": "Lower hotel and travel costs",
+    "match": "Round of 16"
+  },
+  {
+    "type": "Purist",
+    "city": "Los Angeles",
+    "reason": "Highest quality football matches",
+    "match": "Semi Final"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "team": "Egypt",
+    "opponent": "USA",
+    "stage": "Group Stage",
+    "city": "New York",
+    "stadium": "MetLife Stadium",
+    "date": "2026-06-15"
+  },
+  {
+    "team": "Egypt",
+    "opponent": "Mexico",
+    "stage": "Group Stage",
+    "city": "Dallas",
+    "stadium": "AT&T Stadium",
+    "date": "2026-06-20"
+  },
+  {
+    "team": "Egypt",
+    "opponent": "Japan",
+    "stage": "Group Stage",
+    "city": "Los Angeles",
+    "stadium": "SoFi Stadium",
+    "date": "2026-06-25"
+  }
+]
