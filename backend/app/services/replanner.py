@@ -1,31 +1,32 @@
-from app.services.alternative_search import get_alternative_routes
+from app.services.replanning_engine import run_replanning
 from app.services.mission_store import get_latest_mission
 
 def rebuild_trip(team: str):
-
+    """
+    Rebuilds the trip for the team using the new modular replanning engine.
+    Maintains backward compatibility with the original rebuild_trip signature and output.
+    """
     mission = get_latest_mission(team)
+    result = run_replanning(mission)
+    rec = result.get("recommendation")
 
-    routes = get_alternative_routes()
-
-    travel_style = mission["travel_style"]
-
-    best_route = None
-
-    for route in routes:
-
-        if route["type"] == travel_style:
-            best_route = route
-            break
-
-    if best_route is None:
-        best_route = routes[0]
+    if not rec:
+        return {
+            "team": team,
+            "travel_style": mission.get("travel_style"),
+            "old_itinerary": mission.get("itinerary"),
+            "new_destination": None,
+            "match": None,
+            "reason": None,
+            "status": "replanned"
+        }
 
     return {
         "team": team,
-        "travel_style": travel_style,
-        "old_itinerary": mission["itinerary"],
-        "new_destination": best_route["city"],
-        "match": best_route["match"],
-        "reason": best_route["reason"],
+        "travel_style": mission.get("travel_style"),
+        "old_itinerary": mission.get("itinerary"),
+        "new_destination": rec["city"],
+        "match": rec["match"],
+        "reason": rec["reason"],
         "status": "replanned"
     }

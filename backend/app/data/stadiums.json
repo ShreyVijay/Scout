@@ -1,0 +1,83 @@
+[
+  {
+    "stadium": "MetLife Stadium",
+    "city": "New York",
+    "country": "USA",
+    "capacity": 82500,
+    "description": "Massive stadium located in East Rutherford, NJ, serving the New York area.",
+    "atmosphere_score": 90,
+    "transport_score": 80
+  },
+  {
+    "stadium": "AT&T Stadium",
+    "city": "Dallas",
+    "country": "USA",
+    "capacity": 80000,
+    "description": "Retractable roof stadium in Arlington, TX, known as Jerry World.",
+    "atmosphere_score": 88,
+    "transport_score": 65
+  },
+  {
+    "stadium": "SoFi Stadium",
+    "city": "Los Angeles",
+    "country": "USA",
+    "capacity": 70240,
+    "description": "State-of-the-art stadium located in Inglewood, CA.",
+    "atmosphere_score": 93,
+    "transport_score": 60
+  },
+  {
+    "stadium": "Hard Rock Stadium",
+    "city": "Miami",
+    "country": "USA",
+    "capacity": 64767,
+    "description": "Multi-purpose stadium located in Miami Gardens, FL.",
+    "atmosphere_score": 87,
+    "transport_score": 70
+  },
+  {
+    "stadium": "Mercedes-Benz Stadium",
+    "city": "Atlanta",
+    "country": "USA",
+    "capacity": 71000,
+    "description": "Retractable roof stadium in Atlanta, GA, famous for its pinwheel roof.",
+    "atmosphere_score": 91,
+    "transport_score": 85
+  },
+  {
+    "stadium": "NRG Stadium",
+    "city": "Houston",
+    "country": "USA",
+    "capacity": 72220,
+    "description": "Retractable roof stadium in Houston, TX.",
+    "atmosphere_score": 85,
+    "transport_score": 75
+  },
+  {
+    "stadium": "Lumen Field",
+    "city": "Seattle",
+    "country": "USA",
+    "capacity": 68740,
+    "description": "Famous for its loud home crowd and scenic views of Seattle skyline.",
+    "atmosphere_score": 95,
+    "transport_score": 82
+  },
+  {
+    "stadium": "Gillette Stadium",
+    "city": "Boston",
+    "country": "USA",
+    "capacity": 65878,
+    "description": "Stadium located in Foxborough, MA, serving the New England region.",
+    "atmosphere_score": 86,
+    "transport_score": 68
+  },
+  {
+    "stadium": "GEHA Field at Arrowhead Stadium",
+    "city": "Kansas City",
+    "country": "USA",
+    "capacity": 76416,
+    "description": "Legendary open-air stadium in Kansas City, MO, famous for world-record crowd noise.",
+    "atmosphere_score": 98,
+    "transport_score": 75
+  }
+]

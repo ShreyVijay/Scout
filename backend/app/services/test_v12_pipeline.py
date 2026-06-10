@@ -30,7 +30,15 @@ def run_integration_test():
             "properties": {
                 "mission_id": {"type": "keyword"},
                 "team": {"type": "keyword"},
-                "budget": {"type": "integer"},
+                "budget": {
+                    "properties": {
+                        "total_budget": {"type": "integer"},
+                        "spent_budget": {"type": "integer"},
+                        "estimated_cost": {"type": "integer"},
+                        "remaining_budget": {"type": "integer"},
+                        "risk_level": {"type": "keyword"}
+                    }
+                },
                 "travel_style": {"type": "keyword"},
                 "objective": {"type": "text"},
                 "mission_state": {"type": "keyword"},

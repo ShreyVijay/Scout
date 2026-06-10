@@ -1,0 +1,1 @@
+"""Scout MCP integration layer."""

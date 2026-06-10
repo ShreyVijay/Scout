@@ -1,0 +1,92 @@
+[
+  {
+    "city": "New York",
+    "country": "USA",
+    "description": "The largest city in the USA, hosting matches at MetLife Stadium.",
+    "tags": ["Metropolitan", "Coastal", "Historic"],
+    "daily_cost": 250,
+    "hotel_cost": 180,
+    "transport_cost": 40,
+    "food_cost": 30
+  },
+  {
+    "city": "Dallas",
+    "country": "USA",
+    "description": "Major city in Texas with a massive sporting culture.",
+    "tags": ["Modern", "Inland", "South"],
+    "daily_cost": 180,
+    "hotel_cost": 120,
+    "transport_cost": 35,
+    "food_cost": 25
+  },
+  {
+    "city": "Los Angeles",
+    "country": "USA",
+    "description": "Coastal metropolis in California with high-end venues like SoFi Stadium.",
+    "tags": ["Metropolitan", "Coastal", "West"],
+    "daily_cost": 240,
+    "hotel_cost": 170,
+    "transport_cost": 45,
+    "food_cost": 25
+  },
+  {
+    "city": "Miami",
+    "country": "USA",
+    "description": "Tropical coastal city in Florida, home to Hard Rock Stadium.",
+    "tags": ["Tropical", "Coastal", "South"],
+    "daily_cost": 220,
+    "hotel_cost": 150,
+    "transport_cost": 40,
+    "food_cost": 30
+  },
+  {
+    "city": "Houston",
+    "country": "USA",
+    "description": "Diverse metropolis in Texas with rich cultural heritage.",
+    "tags": ["Diverse", "Inland", "South"],
+    "daily_cost": 170,
+    "hotel_cost": 110,
+    "transport_cost": 35,
+    "food_cost": 25
+  },
+  {
+    "city": "Atlanta",
+    "country": "USA",
+    "description": "Cultural hub of the Southeast, hosting matches at Mercedes-Benz Stadium.",
+    "tags": ["Historic", "Inland", "Southeast"],
+    "daily_cost": 190,
+    "hotel_cost": 130,
+    "transport_cost": 35,
+    "food_cost": 25
+  },
+  {
+    "city": "Seattle",
+    "country": "USA",
+    "description": "Pacific Northwest hub known for tech and nature.",
+    "tags": ["Coastal", "Northwest", "Scenic"],
+    "daily_cost": 210,
+    "hotel_cost": 140,
+    "transport_cost": 40,
+    "food_cost": 30
+  },
+  {
+    "city": "Boston",
+    "country": "USA",
+    "description": "Historic city in New England with rich sporting history.",
+    "tags": ["Historic", "Coastal", "East"],
+    "daily_cost": 230,
+    "hotel_cost": 160,
+    "transport_cost": 40,
+    "food_cost": 30
+  },
+  {
+    "city": "Kansas City",
+    "country": "USA",
+    "description": "Midwest city known for its passionate sports culture and BBQ.",
+    "tags": ["Midwest", "Inland", "BBQ"],
+    "daily_cost": 130,
+    "hotel_cost": 80,
+    "transport_cost": 25,
+    "food_cost": 20
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "city": "New York",
+    "atmosphere_score": 9.0,
+    "budget_score": 4.0,
+    "transport_score": 10.0,
+    "fan_zone_score": 9.5
+  },
+  {
+    "city": "Dallas",
+    "atmosphere_score": 7.0,
+    "budget_score": 8.0,
+    "transport_score": 6.0,
+    "fan_zone_score": 8.5
+  },
+  {
+    "city": "Los Angeles",
+    "atmosphere_score": 8.0,
+    "budget_score": 5.0,
+    "transport_score": 9.0,
+    "fan_zone_score": 9.0
+  },
+  {
+    "city": "Miami",
+    "atmosphere_score": 10.0,
+    "budget_score": 4.0,
+    "transport_score": 8.0,
+    "fan_zone_score": 8.8
+  },
+  {
+    "city": "Houston",
+    "atmosphere_score": 7.0,
+    "budget_score": 8.0,
+    "transport_score": 7.0,
+    "fan_zone_score": 8.0
+  },
+  {
+    "city": "Atlanta",
+    "atmosphere_score": 8.0,
+    "budget_score": 7.0,
+    "transport_score": 8.0,
+    "fan_zone_score": 8.7
+  },
+  {
+    "city": "Seattle",
+    "atmosphere_score": 9.0,
+    "budget_score": 6.0,
+    "transport_score": 8.0,
+    "fan_zone_score": 9.0
+  },
+  {
+    "city": "Boston",
+    "atmosphere_score": 8.0,
+    "budget_score": 5.0,
+    "transport_score": 8.0,
+    "fan_zone_score": 8.5
+  },
+  {
+    "city": "Kansas City",
+    "atmosphere_score": 6.0,
+    "budget_score": 9.0,
+    "transport_score": 7.0,
+    "fan_zone_score": 8.0
+  }
+]

@@ -29,7 +29,13 @@ es.indices.create(
                 "type": "keyword"
             },
             "budget": {
-                "type": "integer"
+                "properties": {
+                    "total_budget": {"type": "integer"},
+                    "spent_budget": {"type": "integer"},
+                    "estimated_cost": {"type": "integer"},
+                    "remaining_budget": {"type": "integer"},
+                    "risk_level": {"type": "keyword"}
+                }
             },
             "travel_style": {
                 "type": "keyword"

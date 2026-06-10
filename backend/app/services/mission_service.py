@@ -17,7 +17,13 @@ def create_mission(
 
     "team": team,
 
-    "budget": budget,
+    "budget": {
+        "total_budget": budget,
+        "spent_budget": 0,
+        "estimated_cost": 0,
+        "remaining_budget": budget,
+        "risk_level": "LOW"
+    },
 
     "travel_style": travel_style,
 
