@@ -1,2 +1,3 @@
 USERS_COLLECTION = "users"
 SAVED_MISSIONS_COLLECTION = "saved_missions"
+USER_MISSIONS_COLLECTION = "user_missions"

@@ -4,5 +4,10 @@ def assert_tool_response(testcase, response, tool_name):
     testcase.assertIn("latency_ms", response["metadata"])
     testcase.assertEqual(response["metadata"]["version"], "v1")
     testcase.assertIn("success", response)
-    testcase.assertIn("data", response)
-    testcase.assertIn("error", response)
+    if response.get("success"):
+        testcase.assertIn("data", response)
+        testcase.assertNotIn("error", response)
+    else:
+        testcase.assertIn("error", response)
+        testcase.assertNotIn("data", response)
+

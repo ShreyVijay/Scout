@@ -18,6 +18,10 @@ class VenueDTO(BaseModel):
     category: str
     rating: float
     location: LocationDTO
+    photo_url: Optional[str] = None
+    vicinity: Optional[str] = None
+    price_level: Optional[int] = None
+    place_id: Optional[str] = None
 
 
 class ExplanationDTO(BaseModel):

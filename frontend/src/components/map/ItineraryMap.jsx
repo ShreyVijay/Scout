@@ -22,14 +22,21 @@ export default function ItineraryMap({ stops = [], team }) {
       polylineRef.current = null;
     }
 
-    if (!stops || stops.length === 0) return;
+    const fallbackStops = [
+      { city: 'Mexico City', stadium: 'Estadio Azteca', date: '2026-06-11', match: 'Opening match' },
+      { city: 'Toronto', stadium: 'BMO Field', date: '2026-06-12', match: 'Group stage' },
+      { city: 'Los Angeles', stadium: 'SoFi Stadium', date: '2026-06-12', match: 'Group stage' },
+      { city: 'Dallas', stadium: 'AT&T Stadium', date: '2026-06-20', match: 'Host city' },
+      { city: 'New York/New Jersey', stadium: 'MetLife Stadium', date: '2026-07-19', match: 'Final' },
+    ];
+    const visibleStops = stops && stops.length > 0 ? stops : fallbackStops;
 
     if (googleMapsLoaded && mapInstance) {
       // Real Google Maps logic
       const pathCoords = [];
       const bounds = new window.google.maps.LatLngBounds();
 
-      stops.forEach((stop, index) => {
+      visibleStops.forEach((stop, index) => {
         const cityInfo = cityCoordsMap[stop.city];
         if (!cityInfo) return;
 
@@ -42,7 +49,7 @@ export default function ItineraryMap({ stops = [], team }) {
             <div style="color: #1a1a2e; padding: 4px;">
               <h4 style="margin: 0 0 4px 0;">Stop ${index + 1}: ${stop.city}</h4>
               <p style="margin: 0; font-size: 11px;">
-                <strong>Stadium:</strong> ${stop.stadium}<br/>
+                <strong>Stadium:</strong> ${stop.stadium || 'Host Stadium'}<br/>
                 <strong>Date:</strong> ${stop.date}
               </p>
             </div>
@@ -86,30 +93,30 @@ export default function ItineraryMap({ stops = [], team }) {
       }
     } else {
       // Fallback custom SVG map registration
-      stops.forEach((stop, index) => {
+      visibleStops.forEach((stop, index) => {
         registerMarker({
           id: `stop-${stop.city}-${index}`,
           type: 'city',
           city: stop.city,
           name: `Stop ${index + 1}: ${stop.city}`,
-          stadium: stop.stadium,
+          stadium: stop.stadium || 'Host Stadium',
           date: stop.date,
-          match: `Tournament Stop #${index + 1}`,
+          match: stop.match || `Tournament Stop #${index + 1}`,
           team: team
         });
       });
 
-      if (stops.length >= 2) {
+      if (visibleStops.length >= 2) {
         registerPath({
           id: 'itinerary-path',
-          stops: stops.map(s => s.city),
+          stops: visibleStops.map(s => s.city),
           color: '#2d6a4f'
         });
       }
 
       // Cleanup registration
       return () => {
-        stops.forEach((stop, index) => {
+        visibleStops.forEach((stop, index) => {
           unregisterMarker(`stop-${stop.city}-${index}`);
         });
         unregisterPath('itinerary-path');

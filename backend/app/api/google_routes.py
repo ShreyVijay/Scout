@@ -1,6 +1,8 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+import requests
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from app.mcp.elastic_client import ElasticConfigurationError
@@ -109,6 +111,45 @@ def get_stadium_map(stadium: str):
     if not loc:
         raise HTTPException(status_code=404, detail="Stadium coordinates not found")
     return loc
+
+
+@router.get("/place-photo")
+def get_place_photo_by_query(query: str = Query(...), max_width: int = 900):
+    require_google_maps_config()
+    api_key = get_secret("GOOGLE_MAPS_API_KEY")
+    client = get_venue_service().provider.get_maps_client() if hasattr(get_venue_service().provider, "get_maps_client") else None
+    if client is None:
+        from google.providers.google_providers import GoogleClientSingleton
+        client = GoogleClientSingleton.get_maps_client()
+
+    search = client.places(query=query)
+    results = search.get("results", [])
+    photos = results[0].get("photos", []) if results else []
+    if not photos:
+        raise HTTPException(status_code=404, detail="Google Places photo not found")
+    return get_place_photo(photos[0]["photo_reference"], max_width)
+
+
+@router.get("/place-photo/{photo_reference}")
+def get_place_photo(photo_reference: str, max_width: int = 900):
+    require_google_maps_config()
+    api_key = get_secret("GOOGLE_MAPS_API_KEY")
+    response = requests.get(
+        "https://maps.googleapis.com/maps/api/place/photo",
+        params={
+            "maxwidth": max_width,
+            "photo_reference": photo_reference,
+            "key": api_key,
+        },
+        timeout=12,
+    )
+    if response.status_code >= 400:
+        raise HTTPException(status_code=response.status_code, detail="Google Places photo request failed")
+    return Response(
+        content=response.content,
+        media_type=response.headers.get("content-type", "image/jpeg"),
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @router.get("/route")

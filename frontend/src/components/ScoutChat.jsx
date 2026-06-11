@@ -4,7 +4,7 @@ import { sendScoutChat } from '../services/api';
 import { useSession } from '../store/useSession';
 import { t } from '../i18n';
 
-export default function ScoutChat({ open, onClose }) {
+export default function ScoutChat({ open, onOpen, onClose }) {
   const language = useSession((state) => state.language);
   const name = useSession((state) => state.name);
 
@@ -46,14 +46,14 @@ export default function ScoutChat({ open, onClose }) {
       });
       setMessages([
         ...nextMessages,
-        { role: 'assistant', text: response.reply || 'I checked the current Scout context.' },
+        { role: 'assistant', text: response.reply || 'I checked the current skaut context.' },
       ]);
     } catch (error) {
       setMessages([
         ...nextMessages,
         {
           role: 'assistant',
-          text: error.response?.data?.detail || 'Scout AI is offline, but you can still use the mission and replanning tools.',
+          text: error.response?.data?.detail || 'skaut AI is offline, but you can still use the mission and replanning tools.',
         },
       ]);
     } finally {
@@ -66,8 +66,8 @@ export default function ScoutChat({ open, onClose }) {
       <button
         type="button"
         className="chat-fab"
-        aria-label="Open Scout AI"
-        onClick={onClose}
+        aria-label="Open skaut AI"
+        onClick={onOpen}
       >
         AI
       </button>
@@ -76,13 +76,17 @@ export default function ScoutChat({ open, onClose }) {
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50" style={{ background: 'rgba(0,0,0,0.6)' }} />
           <Drawer.Content className="chat-panel fixed bottom-0 left-0 right-0 z-50">
+            <Drawer.Title className="sr-only">skaut travel command assistant</Drawer.Title>
+            <Drawer.Description className="sr-only">
+              Ask skaut about FIFA 2026 routes, cities, stadiums, budgets, and replanning.
+            </Drawer.Description>
             <div className="chat-handle mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
             <div className="section-title">
               <div>
                 <p className="eyebrow">{t('nav.scout', language)}</p>
                 <h2>Travel command assistant</h2>
               </div>
-              <button type="button" className="icon-btn" aria-label="Close Scout AI" onClick={onClose}>
+              <button type="button" className="icon-btn" aria-label="Close skaut AI" onClick={onClose}>
                 X
               </button>
             </div>

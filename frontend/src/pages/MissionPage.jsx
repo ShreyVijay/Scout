@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getMission } from '../services/api';
 import MissionCard from '../components/MissionCard';
@@ -6,7 +6,7 @@ import MissionStateCard from '../components/MissionStateCard';
 import BudgetCard from '../components/BudgetCard';
 import MapView from '../components/map/MapView';
 import ItineraryMap from '../components/map/ItineraryMap';
-import { MissionBar, JourneyTimeline } from '../components/PitchUI';
+import { MissionBar, JourneyTimeline, HeroReplanning } from '../components/PitchUI';
 
 export default function MissionPage() {
   const { team } = useParams();
@@ -14,15 +14,15 @@ export default function MissionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchMission() {
-      setLoading(true);
-      setError(null);
+  const fetchMission = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    setError(null);
 
-      try {
-        const data = await getMission(team);
-        setMission(data);
-      } catch (err) {
+    try {
+      const data = await getMission(team);
+      setMission(data);
+    } catch (err) {
+      if (!silent) {
         if (err.response?.status === 404) {
           setError(`Mission not found for team: ${team}`);
         } else {
@@ -32,13 +32,21 @@ export default function MissionPage() {
             'Failed to load mission'
           );
         }
-      } finally {
-        setLoading(false);
       }
+    } finally {
+      if (!silent) setLoading(false);
     }
-
-    fetchMission();
   }, [team]);
+
+  useEffect(() => {
+    fetchMission();
+  }, [fetchMission]);
+
+  // Poll every 5s to catch the 30-second elimination event
+  useEffect(() => {
+    const interval = setInterval(() => fetchMission(true), 5000);
+    return () => clearInterval(interval);
+  }, [fetchMission]);
 
   if (loading) {
     return (
@@ -66,10 +74,11 @@ export default function MissionPage() {
 
   const itinerary = mission.itinerary || [];
   const history = mission.state_history || [];
+  const isEliminated = mission.tournament_state === 'ELIMINATED' || mission.tournament_state === 'eliminated' || mission.mission_state === 'replanning_required';
 
   return (
     <div id="mission-page" className="map-layout">
-      <MissionBar mission={mission} mode="monitoring" />
+      <MissionBar mission={mission} mode={isEliminated ? 'replanning' : 'monitoring'} />
       
       <div className="map-grid">
         <div className="map-sidebar">
@@ -86,6 +95,17 @@ export default function MissionPage() {
               Review Route
             </Link>
           </section>
+
+          {/* Elimination alert banner */}
+          {isEliminated && (
+            <section style={{ marginBottom: '16px' }}>
+              <HeroReplanning
+                team={mission.team}
+                onReplan={() => window.location.href = `/replan/${encodeURIComponent(mission.team)}`}
+                loading={false}
+              />
+            </section>
+          )}
 
           <div className="grid-2">
             <MissionCard mission={mission} />
@@ -115,7 +135,7 @@ export default function MissionPage() {
                     padding: '0.75rem', 
                     background: 'var(--c-surface)', 
                     borderRadius: '8px',
-                    borderLeft: '2px solid var(--c-amber)'
+                    borderLeft: `2px solid ${evt.state === 'eliminated' ? 'var(--c-red)' : 'var(--c-amber)'}`
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <strong style={{ fontSize: '0.85rem' }}>{evt.state.toUpperCase()}</strong>
@@ -132,7 +152,9 @@ export default function MissionPage() {
         </div>
 
         <div className="map-pane">
-          <ItineraryMap stops={itinerary} team={mission.team} />
+          <MapView centerCity={itinerary[0]?.city || 'Miami'} height="100%">
+            <ItineraryMap stops={itinerary} team={mission.team} />
+          </MapView>
         </div>
       </div>
     </div>

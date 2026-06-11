@@ -81,7 +81,7 @@ export default function OnboardingPage() {
             {step === 1 && (
               <motion.div key="step1" variants={variants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.2 }}>
                 <h2>Who are you following?</h2>
-                <p style={{ color: 'var(--c-t2)', marginBottom: '24px' }}>Let's get your Scout profile set up.</p>
+                <p style={{ color: 'var(--c-t2)', marginBottom: '24px' }}>Let's get your skaut profile set up.</p>
                 
                 {error && <div className="error-banner" style={{ marginBottom: '16px', color: 'var(--c-red)' }}>{error}</div>}
                 
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
             {step === 2 && (
               <motion.div key="step2" variants={variants} initial="initial" animate="animate" exit="exit" transition={{ duration: 0.2 }}>
                 <h2>Language & Theme</h2>
-                <p style={{ color: 'var(--c-t2)', marginBottom: '24px' }}>Customize your Scout experience.</p>
+                <p style={{ color: 'var(--c-t2)', marginBottom: '24px' }}>Customize your skaut experience.</p>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px', border: '1px solid var(--c-border)', borderRadius: '8px' }}>
                   <span>Language</span>

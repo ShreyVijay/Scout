@@ -5,10 +5,10 @@
     "cities": "Cidades",
     "stadiums": "Estádios",
     "profile": "Perfil",
-    "scout": "Scout"
+    "scout": "skaut"
   },
   "dashboard": {
-    "hero_eyebrow": "Centro de comando Scout",
+    "hero_eyebrow": "Centro de comando skaut",
     "hero_title": "Planeje cada movimento no dia do jogo.",
     "active_missions": "Missões ativas",
     "budget_tracked": "Orçamento rastreado",
@@ -24,7 +24,7 @@
     "placeholder": "Pergunte sobre rotas, cidades, orçamento..."
   },
   "wallet": {
-    "title": "Carteira Scout",
+    "title": "Carteira skaut",
     "balance": "Saldo",
     "add_funds": "Adicionar fundos",
     "upi_id": "ID UPI",

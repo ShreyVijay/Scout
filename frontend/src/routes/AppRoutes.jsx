@@ -25,6 +25,8 @@ export default function AppRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/onboarding" element={<PageTransition><OnboardingPage /></PageTransition>} />
+
+
         <Route path="/dashboard" element={<PageTransition><DashboardPage /></PageTransition>} />
         <Route path="/new-mission" element={<PageTransition><HomePage /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />

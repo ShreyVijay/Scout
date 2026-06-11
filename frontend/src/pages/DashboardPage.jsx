@@ -1,20 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getMissions } from '../services/api';
 import WalletDrawer from '../components/WalletDrawer';
 import { useWallet } from '../store/useWallet';
 import { useSession } from '../store/useSession';
 import { t } from '../i18n';
-import { HeroLive, GoalOverlay } from '../components/PitchUI';
+import { HeroLive, GoalOverlay, HeroReplanning } from '../components/PitchUI';
 import MapView from '../components/map/MapView';
 import ItineraryMap from '../components/map/ItineraryMap';
+import { toast } from 'sonner';
 
 const getCountryCode = (team) => {
   const map = {
     'Argentina': 'ar', 'Brazil': 'br', 'USA': 'us', 'Mexico': 'mx', 'Canada': 'ca',
     'England': 'gb-eng', 'France': 'fr', 'Germany': 'de', 'Spain': 'es', 'Portugal': 'pt',
     'Japan': 'jp', 'South Korea': 'kr', 'Egypt': 'eg', 'Morocco': 'ma', 'Senegal': 'sn',
-    'Colombia': 'co', 'Uruguay': 'uy', 'Croatia': 'hr', 'Netherlands': 'nl', 'Belgium': 'be'
+    'Colombia': 'co', 'Uruguay': 'uy', 'Croatia': 'hr', 'Netherlands': 'nl', 'Belgium': 'be',
+    'Australia': 'au', 'Iran': 'ir', 'Iraq': 'iq', 'Jordan': 'jo', 'Qatar': 'qa',
+    'Saudi Arabia': 'sa', 'Uzbekistan': 'uz', 'Algeria': 'dz', 'Cape Verde': 'cv',
+    'DR Congo': 'cd', 'Ivory Coast': 'ci', 'Ghana': 'gh', 'South Africa': 'za',
+    'Tunisia': 'tn', 'Curacao': 'cw', 'Haiti': 'ht', 'Panama': 'pa', 'Ecuador': 'ec',
+    'Paraguay': 'py', 'New Zealand': 'nz', 'Austria': 'at', 'Bosnia and Herzegovina': 'ba',
+    'Czechia': 'cz', 'Norway': 'no', 'Scotland': 'gb-sct', 'Sweden': 'se',
+    'Switzerland': 'ch', 'Türkiye': 'tr',
   };
   return map[team] || 'un';
 };
@@ -42,7 +50,9 @@ const alerts = [
 
 export default function DashboardPage() {
   const [missions, setMissions] = useState([]);
+  const [historyMissions, setHistoryMissions] = useState([]);
   const [currentMissionId, setCurrentMissionId] = useState(null);
+  const [currentMission, setCurrentMission] = useState(null);
   const [savedRecs, setSavedRecs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,34 +61,44 @@ export default function DashboardPage() {
   const balance = useWallet((state) => state.balance);
   const [goalVisible, setGoalVisible] = useState(false);
 
-  useEffect(() => {
-    async function loadDashboard() {
+  const loadDashboard = useCallback(async (silent = false) => {
+    if (!silent) {
       setLoading(true);
       setError(null);
-
-      try {
-        const email = useSession.getState().email;
-        const data = await getMissions(email);
-        setMissions(data.missions || []);
-        setCurrentMissionId(data.current_mission_id || null);
-      } catch (err) {
-        setError(err.message || 'Failed to fetch missions');
-      } finally {
-        setLoading(false);
-      }
-
-      try {
-        const saved = JSON.parse(localStorage.getItem('saved_recommendations') || '[]');
-        setSavedRecs(saved);
-      } catch {
-        setSavedRecs([]);
-      }
     }
 
-    loadDashboard();
+    try {
+      const email = useSession.getState().email;
+      const data = await getMissions(email);
+      setMissions(data.missions || []);
+      setHistoryMissions(data.history_missions || []);
+      setCurrentMission(data.current_mission || null);
+      setCurrentMissionId(data.current_mission_id || null);
+    } catch (err) {
+      if (!silent) setError(err.message || 'Failed to fetch missions');
+    } finally {
+      if (!silent) setLoading(false);
+    }
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('saved_recommendations') || '[]');
+      setSavedRecs(saved);
+    } catch {
+      setSavedRecs([]);
+    }
   }, []);
 
-  const activeMissionsCount = missions.length;
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  // Poll every 5s to catch the 30-second elimination event
+  useEffect(() => {
+    const interval = setInterval(() => loadDashboard(true), 5000);
+    return () => clearInterval(interval);
+  }, [loadDashboard]);
+
+  const activeMissionsCount = currentMission ? 1 : 0;
   const savedRecsCount = savedRecs.length;
 
   function removeRecommendation(index) {
@@ -86,6 +106,27 @@ export default function DashboardPage() {
     localStorage.setItem('saved_recommendations', JSON.stringify(updated));
     setSavedRecs(updated);
   }
+
+  // Determine current mission and its state
+  const displayedMission = currentMission || missions.find(m => m.mission_id === currentMissionId) || missions[0];
+  const isEliminated = displayedMission && (
+    displayedMission.tournament_state === 'ELIMINATED' ||
+    displayedMission.tournament_state === 'eliminated' ||
+    displayedMission.mission_state === 'replanning_required'
+  );
+
+  useEffect(() => {
+    if (!displayedMission) return undefined;
+
+    const timer = setTimeout(() => {
+      toast.warning(`${displayedMission.team} elimination alert`, {
+        description: 'Demo trigger fired. Replanning is now recommended.',
+        duration: 6000,
+      });
+    }, 30000);
+
+    return () => clearTimeout(timer);
+  }, [displayedMission?.mission_id]);
 
   return (
     <div id="dashboard-page" className="page">
@@ -111,9 +152,20 @@ export default function DashboardPage() {
 
       <WalletDrawer open={walletOpen} onClose={() => setWalletOpen(false)} />
 
-      <section style={{ marginBottom: '24px' }}>
-        <HeroLive onGoal={() => setGoalVisible(true)} />
-      </section>
+      {/* Show replanning banner if elimination detected */}
+      {isEliminated ? (
+        <section style={{ marginBottom: '24px' }}>
+          <HeroReplanning
+            team={displayedMission.team}
+            onReplan={() => window.location.href = `/replan/${encodeURIComponent(displayedMission.team)}`}
+            loading={false}
+          />
+        </section>
+      ) : (
+        <section style={{ marginBottom: '24px' }}>
+          <HeroLive onGoal={() => setGoalVisible(true)} />
+        </section>
+      )}
 
       <div className="grid-2">
         <section className="card" style={{ gridColumn: '1 / -1' }}>
@@ -125,64 +177,56 @@ export default function DashboardPage() {
             <p className="loading">Loading mission...</p>
           ) : error ? (
             <div className="error-banner">{error}</div>
-          ) : missions.length === 0 ? (
+          ) : !displayedMission ? (
             <div>
               <p className="empty">No active mission. Start planning your World Cup journey.</p>
               <Link to="/new-mission" className="btn btn-secondary">Create Mission</Link>
             </div>
-          ) : (
+          ) : displayedMission ? (
             <div className="mission-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {(() => {
-                const currentMission = missions.find(m => m.mission_id === currentMissionId) || missions[0];
-                if (!currentMission) return null;
-                return (
-                  <div key={`current-${currentMission.mission_id}`} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <Link
-                      className="mission-row"
-                      to={`/mission/${encodeURIComponent(currentMission.team)}`}
-                      style={{ background: 'var(--c-surface)', padding: '24px', border: '1px solid var(--c-border)', borderRadius: '12px' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ fontSize: '3rem' }}>
-                          <img 
-                            src={`https://flagcdn.com/w80/${getCountryCode(currentMission.team)}.png`} 
-                            alt={`${currentMission.team} flag`} 
-                            style={{ width: '60px', borderRadius: '4px', border: '1px solid #ccc' }}
-                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://flagcdn.com/w80/un.png'; }}
-                          />
-                        </div>
-                        <div>
-                          <strong style={{ fontSize: '1.25rem', color: 'var(--c-t1)' }}>{currentMission.team}</strong>
-                          <div style={{ color: 'var(--c-t2)', marginTop: '4px' }}>{currentMission.objective || 'Follow the tournament path'}</div>
-                        </div>
-                      </div>
-                      <span className="mission-meta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                        <span className="badge" style={{ backgroundColor: 'var(--c-amber)', color: '#000' }}>Active Route</span>
-                        <strong style={{ fontSize: '1.25rem' }}>${Number(currentMission.budget?.total_budget || currentMission.budget || 0).toLocaleString()}</strong>
-                      </span>
-                    </Link>
-                    
-                    {currentMission.itinerary && currentMission.itinerary.length > 0 && (
-                      <div style={{ height: '300px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--c-border)' }}>
-                        <MapView centerCity={currentMission.itinerary[0]?.city || 'Miami'} height="100%">
-                          <ItineraryMap stops={currentMission.itinerary} team={currentMission.team} />
-                        </MapView>
-                      </div>
-                    )}
+              <Link
+                className="mission-row"
+                to={`/mission/${encodeURIComponent(displayedMission.team)}`}
+                style={{ background: 'var(--c-surface)', padding: '24px', border: '1px solid var(--c-border)', borderRadius: '12px' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ fontSize: '3rem' }}>
+                    <img
+                      src={`https://flagcdn.com/w80/${getCountryCode(displayedMission.team)}.png`}
+                      alt={`${displayedMission.team} flag`}
+                      style={{ width: '60px', borderRadius: '4px', border: '1px solid #ccc' }}
+                      onError={(e) => { e.target.onerror = null; e.target.src = 'https://flagcdn.com/w80/un.png'; }}
+                    />
                   </div>
-                );
-              })()}
+                  <div>
+                    <strong style={{ fontSize: '1.25rem', color: 'var(--c-t1)' }}>{displayedMission.team}</strong>
+                    <div style={{ color: 'var(--c-t2)', marginTop: '4px' }}>{displayedMission.objective || 'Follow the tournament path'}</div>
+                  </div>
+                </div>
+                <span className="mission-meta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                  <span className="badge" style={{ backgroundColor: isEliminated ? 'var(--c-red)' : 'var(--c-amber)', color: '#000' }}>
+                    {isEliminated ? 'Replanning Required' : 'Active Route'}
+                  </span>
+                  <strong style={{ fontSize: '1.25rem' }}>${Number(displayedMission.budget?.total_budget || displayedMission.budget || 0).toLocaleString()}</strong>
+                </span>
+              </Link>
+
+              <div style={{ height: '390px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--c-border)' }}>
+                <MapView centerCity={displayedMission.itinerary?.[0]?.city || 'Mexico City'} height="100%">
+                  <ItineraryMap stops={displayedMission.itinerary || []} team={displayedMission.team} />
+                </MapView>
+              </div>
             </div>
-          )}
+          ) : null}
         </section>
 
-        {missions.length > 1 && (
+        {historyMissions.length > 0 && (
           <section className="card" style={{ gridColumn: '1 / -1' }}>
             <div className="section-title">
               <h2>Mission History</h2>
             </div>
             <div className="mission-list">
-              {missions.filter(m => m.mission_id !== currentMissionId).map((mission, index) => (
+              {historyMissions.map((mission, index) => (
                 <Link
                   key={`${mission.team}-${index}`}
                   className="mission-row"

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export default function GoalOverlay({ visible, scorer = 'Scout route update', onDismiss }) {
+export default function GoalOverlay({ visible, scorer = 'skaut route update', onDismiss }) {
   useEffect(() => {
     if (!visible) return undefined;
     const timer = window.setTimeout(onDismiss, 3200);

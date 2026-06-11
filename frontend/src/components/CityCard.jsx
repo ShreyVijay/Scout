@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCityPhoto, searchHotels, searchFood } from '../services/placesService';
 import MapView from './map/MapView';
+import ItineraryMap from './map/ItineraryMap';
 import { MapPin, ForkKnife, Bed, MapTrifold, Info } from '@phosphor-icons/react';
 
 function ScoreLine({ label, value }) {
@@ -120,7 +121,7 @@ export default function CityCard({ city }) {
         {loadingPhoto ? (
           <div className="skeleton" style={{ width: '100%', height: '100%', borderRadius: 0 }} />
         ) : photoUrl ? (
-          <img src={photoUrl} alt={city.city} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={photoUrl} alt={city.city} onError={() => setPhotoUrl(null)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <div style={{ width: '100%', height: '100%', background: 'var(--c-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: 'var(--c-t2)' }}>No image</span>
@@ -214,7 +215,17 @@ export default function CityCard({ city }) {
 
           {activeTab === 'map' && (
             <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} style={{ height: '240px' }}>
-              <MapView centerCity={city.city} height="100%" />
+              <MapView centerCity={city.city} height="100%">
+                <ItineraryMap
+                  team="skaut"
+                  stops={[{
+                    city: city.city,
+                    stadium: city.stadium || 'Host city',
+                    date: 'FIFA 2026',
+                    match: `${city.city} host city`,
+                  }]}
+                />
+              </MapView>
             </motion.div>
           )}
         </AnimatePresence>

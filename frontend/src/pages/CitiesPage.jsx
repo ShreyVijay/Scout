@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getCities } from '../services/api';
 import CityCard from '../components/CityCard';
+import MapView from '../components/map/MapView';
+import ItineraryMap from '../components/map/ItineraryMap';
 
 export default function CitiesPage() {
   const [cities, setCities] = useState([]);
@@ -62,11 +64,36 @@ export default function CitiesPage() {
       {cities.length === 0 ? (
         <p className="empty">No cities found.</p>
       ) : (
-        <section className="venue-grid stagger">
-          {cities.map((city, index) => (
-            <CityCard key={`${city.city}-${index}`} city={city} />
-          ))}
-        </section>
+        <>
+          <section className="card map-section">
+            <div className="section-title">
+              <div>
+                <p className="eyebrow">Map</p>
+                <h2>Host Cities & Stadium Markers</h2>
+              </div>
+              <span className="badge">{cities.length} markers</span>
+            </div>
+            <div className="map-section-frame">
+              <MapView centerCity={cities[0]?.city || 'Mexico City'} height="100%">
+                <ItineraryMap
+                  team="skaut"
+                  stops={cities.map((city) => ({
+                    city: city.city,
+                    stadium: city.stadium || 'Host city',
+                    date: 'FIFA 2026',
+                    match: `${city.city} host city`,
+                  }))}
+                />
+              </MapView>
+            </div>
+          </section>
+
+          <section className="venue-grid stagger">
+            {cities.map((city, index) => (
+              <CityCard key={`${city.city}-${index}`} city={city} />
+            ))}
+          </section>
+        </>
       )}
     </div>
   );

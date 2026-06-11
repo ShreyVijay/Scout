@@ -10,13 +10,20 @@ from app.api.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.saved_missions import router as saved_missions_router
 
-app = FastAPI(title="Scout")
+app = FastAPI(title="skaut")
 
 cors_origins = [
     origin.strip()
     for origin in os.getenv("CORS_ORIGINS", "*").split(",")
     if origin.strip()
 ]
+
+deployed_origins = {
+    "https://scout-frontend-436757595175.us-central1.run.app",
+    "https://skaut-frontend-436757595175.us-central1.run.app",
+}
+if "*" not in cors_origins:
+    cors_origins = sorted(set(cors_origins).union(deployed_origins))
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,7 +48,7 @@ except ImportError:
 
 @app.get("/")
 def root():
-    return {"message": "Scout Backend Running"}
+    return {"message": "skaut Backend Running"}
 
 @app.get("/readiness")
 def readiness():

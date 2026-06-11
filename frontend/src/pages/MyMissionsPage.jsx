@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getMissions } from '../services/api';
 import { MissionBar } from '../components/PitchUI';
+import { useSession } from '../store/useSession';
 
 export default function MyMissionsPage() {
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const email = useSession((state) => state.email);
 
   useEffect(() => {
     async function fetchAll() {
       try {
-        const data = await getMissions();
+        const data = await getMissions(email);
         setMissions(data.missions || []);
       } catch (err) {
         setError(err.message || 'Failed to retrieve missions');
@@ -21,7 +23,7 @@ export default function MyMissionsPage() {
     }
 
     fetchAll();
-  }, []);
+  }, [email]);
 
   if (loading) {
     return (

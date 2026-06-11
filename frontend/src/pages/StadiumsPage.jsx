@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getStadiums } from '../services/api';
 import { getStadiumPhoto } from '../services/placesService';
 import { MapPin, Users } from '@phosphor-icons/react';
+import MapView from '../components/map/MapView';
+import ItineraryMap from '../components/map/ItineraryMap';
 
 function StadiumCard({ stadium }) {
   const [photoUrl, setPhotoUrl] = useState(null);
@@ -35,9 +37,10 @@ function StadiumCard({ stadium }) {
         {loading ? (
           <div className="skeleton" style={{ width: '100%', height: '100%', borderRadius: '0' }} />
         ) : photoUrl ? (
-          <img 
+          <img
             src={photoUrl} 
             alt={stadium.stadium} 
+            onError={() => setPhotoUrl(null)}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
           />
         ) : (
@@ -137,11 +140,36 @@ export default function StadiumsPage() {
       {stadiums.length === 0 ? (
         <p className="empty">No stadiums found.</p>
       ) : (
-        <section className="venue-grid stagger">
-          {stadiums.map((stadium, index) => (
-            <StadiumCard key={`${stadium.stadium}-${index}`} stadium={stadium} />
-          ))}
-        </section>
+        <>
+          <section className="card map-section">
+            <div className="section-title">
+              <div>
+                <p className="eyebrow">Map</p>
+                <h2>Stadiums & Host Cities</h2>
+              </div>
+              <span className="badge">{stadiums.length} markers</span>
+            </div>
+            <div className="map-section-frame">
+              <MapView centerCity={stadiums[0]?.city || 'Mexico City'} height="100%">
+                <ItineraryMap
+                  team="skaut"
+                  stops={stadiums.map((stadium) => ({
+                    city: stadium.city,
+                    stadium: stadium.stadium,
+                    date: stadium.capacity ? `${Number(stadium.capacity).toLocaleString()} capacity` : 'FIFA 2026 venue',
+                    match: `${stadium.stadium} - ${stadium.city}`,
+                  }))}
+                />
+              </MapView>
+            </div>
+          </section>
+
+          <section className="venue-grid stagger">
+            {stadiums.map((stadium, index) => (
+              <StadiumCard key={`${stadium.stadium}-${index}`} stadium={stadium} />
+            ))}
+          </section>
+        </>
       )}
     </div>
   );

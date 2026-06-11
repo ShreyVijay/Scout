@@ -6,7 +6,7 @@ export default function HomePage() {
       <div className="page-header">
         <div>
           <p className="eyebrow">New mission</p>
-          <h1>Scout FIFA 2026 Travel Planner</h1>
+          <h1>skaut FIFA 2026 Travel Planner</h1>
         </div>
         <p>Create a mission to plan your team's World Cup journey.</p>
       </div>

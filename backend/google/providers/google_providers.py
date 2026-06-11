@@ -77,10 +77,16 @@ class GooglePlacesProvider(PlacesProvider):
 
             results = []
             for p in places.get("results", [])[:5]: # Top 5
+                photos = p.get("photos") or []
+                photo_reference = photos[0].get("photo_reference") if photos else None
                 results.append(VenueDTO(
                     name=p.get("name", "Unknown"),
                     category=type_str,
                     rating=p.get("rating", 0.0),
+                    photo_url=f"/google/place-photo/{photo_reference}" if photo_reference else None,
+                    vicinity=p.get("vicinity") or p.get("formatted_address"),
+                    price_level=p.get("price_level"),
+                    place_id=p.get("place_id"),
                     location=LocationDTO(
                         lat=p["geometry"]["location"]["lat"],
                         lng=p["geometry"]["location"]["lng"]
@@ -119,7 +125,7 @@ class GoogleGeocodingProvider(GeocodingProvider):
 class GoogleGeminiProvider(LLMProvider):
     def generate_explanation(self, recommendation: dict, reasoning: dict, audit: dict) -> ExplanationDTO:
         prompt = f"""
-        You are a travel agent assistant for Scout.
+        You are a travel agent assistant for skaut.
         Based on the following system decision, explain to the user why this city was chosen in 2-3 friendly sentences.
         Recommendation: {json.dumps(recommendation)}
         Reasoning: {json.dumps(reasoning)}
@@ -136,7 +142,7 @@ class GoogleGeminiProvider(LLMProvider):
 
     def generate_travel_narrative(self, route_data: dict, recommendation: dict) -> ExplanationDTO:
         prompt = f"""
-        You are a travel agent assistant for Scout.
+        You are a travel agent assistant for skaut.
         Based on the recommendation and travel details, provide a short travel narrative.
         Recommendation: {json.dumps(recommendation)}
         Travel Route: {json.dumps(route_data)}

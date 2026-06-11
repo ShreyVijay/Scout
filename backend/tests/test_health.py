@@ -4,7 +4,8 @@ from unittest.mock import patch
 
 from fastapi.responses import JSONResponse
 
-from main import health, readiness
+from app.api.health import health
+from main import readiness
 
 
 class HealthEndpointTests(unittest.TestCase):
@@ -12,8 +13,9 @@ class HealthEndpointTests(unittest.TestCase):
         self.assertEqual(health(), {"status": "ok"})
 
     def test_mcp_health_is_ok(self):
-        from main import mcp_health
+        from app.api.health import mcp_health
         response = mcp_health()
+
         self.assertTrue(response["healthy"])
         self.assertEqual(response["tool_count"], 13)
         self.assertEqual(response["version"], "v1")
@@ -33,10 +35,13 @@ class HealthEndpointTests(unittest.TestCase):
             "ELASTIC_CLOUD_ID": "test-cloud",
             "ELASTIC_USERNAME": "test-user",
             "ELASTIC_PASSWORD": "test-password",
+            "MONGODB_URI": "mongodb://localhost:27017/scout",
+            "GOOGLE_MAPS_API_KEY": "test-key"
         }
 
         with patch.dict(os.environ, environment, clear=True):
             self.assertEqual(readiness(), {"status": "ready"})
+
 
 
 if __name__ == "__main__":

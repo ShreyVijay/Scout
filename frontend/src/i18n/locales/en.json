@@ -5,10 +5,10 @@
     "cities": "Cities",
     "stadiums": "Stadiums",
     "profile": "Profile",
-    "scout": "Scout"
+    "scout": "skaut"
   },
   "dashboard": {
-    "hero_eyebrow": "Scout command center",
+    "hero_eyebrow": "skaut command center",
     "hero_title": "Plan every match-day move.",
     "active_missions": "Active missions",
     "budget_tracked": "Budget tracked",
@@ -24,7 +24,7 @@
     "placeholder": "Ask about routes, cities, budget..."
   },
   "wallet": {
-    "title": "Scout Wallet",
+    "title": "skaut Wallet",
     "balance": "Balance",
     "add_funds": "Add Funds",
     "upi_id": "UPI ID",

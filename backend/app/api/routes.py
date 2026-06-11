@@ -42,15 +42,49 @@ def create_mission_endpoint(request: MissionCreateRequest):
         # Associate with user if email is provided
         if request.email:
             from app.services.user_store import get_user, save_user
+            from app.db.mongodb import get_database
+            from app.db.collections import USER_MISSIONS_COLLECTION
+            from datetime import datetime
+
             user = get_user(request.email)
-            if user:
-                if user.get("current_mission"):
-                    history = user.get("mission_history", [])
-                    if user["current_mission"] not in history:
-                        history.append(user["current_mission"])
-                    user["mission_history"] = history
-                user["current_mission"] = result["mission_id"]
-                save_user(user)
+            if not user:
+                user = {
+                    "user_id": request.email,
+                    "email": request.email,
+                    "name": request.email.split("@")[0],
+                    "mission_history": [],
+                }
+
+            if user.get("current_mission"):
+                history = user.get("mission_history", [])
+                if user["current_mission"] not in history:
+                    history.append(user["current_mission"])
+                user["mission_history"] = history
+
+            user["current_mission"] = result["mission_id"]
+            save_user(user)
+
+            db = get_database()
+            now = datetime.utcnow().isoformat()
+            db[USER_MISSIONS_COLLECTION].update_one(
+                {"email": request.email, "mission_id": result["mission_id"]},
+                {
+                    "$set": {
+                        "email": request.email,
+                        "user_id": request.email,
+                        "mission_id": result["mission_id"],
+                        "team": result["team"],
+                        "is_current": True,
+                        "updated_at": now,
+                    },
+                    "$setOnInsert": {"created_at": now},
+                },
+                upsert=True,
+            )
+            db[USER_MISSIONS_COLLECTION].update_many(
+                {"email": request.email, "mission_id": {"$ne": result["mission_id"]}},
+                {"$set": {"is_current": False}},
+            )
 
         return result
 
@@ -260,6 +294,8 @@ def update_user_endpoint(request: UserUpdateRequest):
 def get_all_missions_endpoint(email: str = None):
     try:
         from app.services.user_store import get_user, es
+        from app.db.mongodb import get_database
+        from app.db.collections import USER_MISSIONS_COLLECTION
         if not es.indices.exists(index="missions"):
             return {"missions": []}
             
@@ -272,6 +308,28 @@ def get_all_missions_endpoint(email: str = None):
             
         current_id = user.get("current_mission")
         history_ids = user.get("mission_history", [])
+
+        try:
+            db = get_database()
+            current_link = db[USER_MISSIONS_COLLECTION].find_one(
+                {"email": email, "is_current": True},
+                {"_id": 0},
+            )
+            if current_link:
+                current_id = current_link.get("mission_id") or current_id
+
+            linked_ids = [
+                doc["mission_id"]
+                for doc in db[USER_MISSIONS_COLLECTION].find(
+                    {"email": email},
+                    {"_id": 0, "mission_id": 1},
+                )
+                if doc.get("mission_id")
+            ]
+            if linked_ids:
+                history_ids = [mission_id for mission_id in linked_ids if mission_id != current_id]
+        except Exception:
+            pass
         
         all_ids = []
         if current_id:
@@ -288,16 +346,23 @@ def get_all_missions_endpoint(email: str = None):
             size=100
         )
         
-        missions = []
+        missions_by_id = {}
         for hit in result["hits"]["hits"]:
             src = hit["_source"]
             src["_elastic_id"] = hit["_id"]
             src = {k: v for k, v in src.items() if k not in ["_elastic_id", "_seq_no", "_primary_term"]}
-            
-            # Sort them on the frontend or backend. For now, just return as missions.
-            missions.append(src)
-            
-        return {"missions": missions, "current_mission_id": current_id}
+            missions_by_id[src.get("mission_id")] = src
+
+        current_mission = missions_by_id.get(current_id)
+        history_missions = [missions_by_id[mission_id] for mission_id in history_ids if mission_id in missions_by_id]
+        missions = ([current_mission] if current_mission else []) + history_missions
+
+        return {
+            "missions": missions,
+            "current_mission": current_mission,
+            "history_missions": history_missions,
+            "current_mission_id": current_id,
+        }
     except Exception as e:
         return {"missions": []}
 
@@ -309,31 +374,50 @@ def chat_endpoint(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Message is required")
 
     lower_message = message.lower()
-    surface = request.context.get("surface", "Scout")
+    surface = request.context.get("surface", "skaut")
     saved_count = len(request.context.get("saved_recommendations", []))
 
-    import google.generativeai as genai
     import os
+
+    blocked_terms = ["visa fraud", "fake ticket", "bypass security", "evade police"]
+    if any(term in lower_message for term in blocked_terms):
+        return {
+            "reply": "I can help with safe travel, verified tickets, budgets, and route replanning, but I cannot assist with unsafe or illegal actions.",
+            "action": "explain_context",
+            "context_used": {
+                "surface": surface,
+                "saved_recommendations": saved_count,
+            },
+        }
     
     # Check if Gemini API key exists
-    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if not gemini_key:
         return {"reply": "Gemini API key is not configured.", "action": "explain_context", "context_used": {}}
         
-    genai.configure(api_key=gemini_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    try:
+        from google import genai
+        client = genai.Client(api_key=gemini_key)
+    except Exception:
+        client = None
     
-    system_prompt = f"""You are Scout, an intelligent travel agent for the FIFA 2026 World Cup.
+    system_prompt = f"""You are skaut, an intelligent travel agent for the FIFA 2026 World Cup.
 The 2026 World Cup features 48 teams, 104 matches, and a new Round of 32 format where top 2 + 8 best third-place teams advance.
 Current surface: {surface}
 Saved recommendations: {saved_count}
 Answer briefly and proactively help them plan their World Cup travel. Recommending actions like 'open_replanning' or 'review_budget' is highly encouraged if relevant."""
 
-    try:
-        response = model.generate_content(system_prompt + "\n\nUser: " + message)
-        reply = response.text
-    except Exception as e:
-        reply = f"Sorry, I encountered an error: {str(e)}"
+    if client:
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=system_prompt + "\n\nUser: " + message,
+            )
+            reply = response.text
+        except Exception as e:
+            reply = f"skaut AI could not reach Gemini right now. I can still route you through the built-in mission, map, budget, and replanning tools. Detail: {str(e)}"
+    else:
+        reply = "Gemini is not available in this backend environment yet. skaut can still help with mission maps, budget review, and replanning from the app data."
         
     action = "explain_context"
     if "replan" in lower_message or "route" in lower_message:

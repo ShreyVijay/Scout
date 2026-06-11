@@ -16,6 +16,7 @@ const HOST_CITIES_COORDS = {
   "Houston": { x: 50, y: 70, lat: 29.7604, lng: -95.3698 },
   "Atlanta": { x: 68, y: 58, lat: 33.7490, lng: -84.3880 },
   "Miami": { x: 78, y: 78, lat: 25.7617, lng: -80.1918 },
+  "New York": { x: 84, y: 31, lat: 40.7128, lng: -74.0060 },
   "Philadelphia": { x: 82, y: 35, lat: 39.9526, lng: -75.1652 },
   "Boston": { x: 86, y: 25, lat: 42.3601, lng: -71.0589 },
   "New York/New Jersey": { x: 84, y: 31, lat: 40.7128, lng: -74.0060 },
@@ -135,8 +136,9 @@ export default function MapView({ children, centerCity = "Miami", height = "400p
   return (
     <MapContext.Provider value={contextValue}>
       <div id="scout-map-wrapper" style={{ position: 'relative', width: '100%', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'none' }}>{children}</div>
         {googleMapsLoaded ? (
-          <div ref={mapRef} style={{ width: '100%', height, borderRadius: '8px', border: '1px solid #ccc' }} />
+          <div ref={mapRef} style={{ width: '100%', minHeight: height === '100%' ? '420px' : undefined, height, borderRadius: '8px', border: '1px solid var(--c-border)' }} />
         ) : (
           /* Premium Custom SVG Fallback Map */
           <div
@@ -372,8 +374,11 @@ export default function MapView({ children, centerCity = "Miami", height = "400p
                   )}
                   {selectedElement.type === 'city' && (
                     <>
+                      <div><strong>City:</strong> {selectedElement.city}</div>
+                      <div><strong>Stadium:</strong> {selectedElement.stadium || 'Host Stadium'}</div>
                       <div><strong>Match:</strong> {selectedElement.match || 'Group Stage'}</div>
                       <div><strong>Date:</strong> {selectedElement.date}</div>
+                      {selectedElement.team && <div><strong>Fan profile:</strong> {selectedElement.team} route marker</div>}
                       <div style={{ marginTop: '8px', padding: '8px', background: 'var(--c-background)', borderRadius: '6px', fontSize: '0.85rem' }}>
                         Welcome to {selectedElement.city}! Follow {selectedElement.team || 'the team'}'s journey to {selectedElement.stadium}.
                       </div>
@@ -395,7 +400,6 @@ export default function MapView({ children, centerCity = "Miami", height = "400p
           </div>
         )}
       </div>
-      {children}
     </MapContext.Provider>
   );
 }

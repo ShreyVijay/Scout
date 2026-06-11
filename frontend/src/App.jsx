@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Link, NavLink, useLocation } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 import ScoutChat from './components/ScoutChat';
+import skautLogo from './assets/skaut-logo.png';
 import { persistAccessibility, useAccessibility } from './store/useAccessibility';
 import { useSession } from './store/useSession';
 import ThemeToggle from './components/ThemeToggle';
 import ErrorBoundary from './components/ErrorBoundary';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { t } from './i18n';
 import './styles.css';
 
@@ -87,28 +88,26 @@ function AppLayout() {
   useEffect(() => {
     if (isOnboarding) return;
     
-    import('sonner').then(({ toast }) => {
-      const messages = [
-        "Checking flight prices for Dallas...",
-        "Monitoring hotel availability in Los Angeles...",
-        "Analyzing Group Stage ticket drops...",
-        "Scanning route optimizations for Mexico City...",
-        "Updating local weather forecasts for Seattle...",
-        "Recalculating budget risk based on current spending...",
-        "Syncing tournament schedule updates..."
-      ];
-      
-      const interval = setInterval(() => {
-        const msg = messages[Math.floor(Math.random() * messages.length)];
-        toast(msg, {
-          description: "Scout AI is running in the background",
-          duration: 4000,
-          position: "bottom-left"
-        });
-      }, 10000);
-      
-      return () => clearInterval(interval);
-    });
+    const messages = [
+      "Checking flight prices for Dallas...",
+      "Monitoring hotel availability in Los Angeles...",
+      "Analyzing Group Stage ticket drops...",
+      "Scanning route optimizations for Mexico City...",
+      "Updating local weather forecasts for Seattle...",
+      "Recalculating budget risk based on current spending...",
+      "Syncing tournament schedule updates..."
+    ];
+
+    const interval = setInterval(() => {
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      toast(msg, {
+        description: "skaut AI is running in the background",
+        duration: 4000,
+        position: "bottom-left"
+      });
+    }, 20000);
+
+    return () => clearInterval(interval);
   }, [isOnboarding]);
 
   return (
@@ -117,7 +116,10 @@ function AppLayout() {
       {!isOnboarding && (
         <nav id="main-nav">
           <div className="nav-brand">
-            <Link to="/dashboard">Scout</Link>
+            <Link to="/dashboard" className="brand-lockup" aria-label="skaut dashboard">
+              <img src={skautLogo} alt="" />
+              <span>skaut</span>
+            </Link>
             {isMapRoute && <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--c-green)', marginLeft: 8 }} />}
             <span>FIFA 2026 travel command</span>
           </div>
@@ -147,7 +149,13 @@ function AppLayout() {
         />
       )}
 
-      {!isOnboarding && <ScoutChat open={chatOpen} onClose={() => setChatOpen((open) => !open)} />}
+      {!isOnboarding && (
+        <ScoutChat
+          open={chatOpen}
+          onOpen={() => setChatOpen(true)}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
 
       {!isOnboarding && (
         <nav id="bottom-nav" aria-label="Primary">

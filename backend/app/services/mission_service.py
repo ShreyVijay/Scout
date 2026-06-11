@@ -27,7 +27,12 @@ def create_mission(
         "objective": objective,
         "itinerary": itinerary,
         "mission_state": "planned",
-        "tournament_state": "group_stage",
+        "tournament_state": "GROUP_STAGE",
+        "group": None,
+        "group_position": None,
+        "third_place_rank": None,
+        "qualified": None,
+        "round": "GROUP_STAGE",
         "state_history": []
     }
 
@@ -43,10 +48,10 @@ def create_mission(
         # Fetch the latest mission state
         m = get_latest_mission(team_name)
         if m and m.get("mission_id") == mission_id:
-            m["tournament_state"] = "eliminated"
+            m["tournament_state"] = "ELIMINATED"
             m["mission_state"] = "replanning_required"
             m["state_history"].append({
-                "state": "eliminated",
+                "state": "ELIMINATED",
                 "timestamp": datetime.utcnow().isoformat(),
                 "reason": f"{team_name} eliminated in Round of 32"
             })
