@@ -1,0 +1,277 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0 2rem;font-family:var(--font-sans)}
+.tier{margin-bottom:1.5rem}
+.tier-head{display:flex;align-items:center;gap:10px;margin-bottom:.75rem}
+.tier-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px}
+.tier-count{font-size:12px;color:var(--color-text-tertiary)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.item{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.item:hover{border-color:var(--color-border-secondary)}
+.item.open{border-color:var(--color-border-primary)}
+.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.item-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.item-tag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.item-desc{font-size:12px;color:var(--color-text-secondary);margin-top:4px;line-height:1.5}
+.detail{overflow:hidden;max-height:0;transition:max-height .25s,opacity .2s;opacity:0}
+.detail.open{max-height:300px;opacity:1}
+.detail-inner{margin-top:10px;border-top:0.5px solid var(--color-border-tertiary);padding-top:10px}
+.code{font-family:var(--font-mono);font-size:11px;background:var(--color-background-secondary);border-radius:6px;padding:8px 10px;color:var(--color-text-primary);line-height:1.6;white-space:pre;overflow-x:auto;margin-top:6px}
+.skip-label{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.skip-why{font-size:11px;color:var(--color-text-tertiary);margin-top:3px}
+.rule{height:.5px;background:var(--color-border-tertiary);margin:1.5rem 0}
+.impl-note{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-top:1.5rem}
+.impl-note-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.impl-note p{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.impl-note code{font-family:var(--font-mono);font-size:11px;background:var(--color-background-primary);padding:1px 5px;border-radius:4px;color:var(--color-text-primary)}
+</style>
+
+<h2 class="sr-only">Accessibility features implementation roadmap — simple and skip categories</h2>
+
+<div class="wrap">
+<div style="margin-bottom:1.25rem">
+  <div style="font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Accessibility — simple wins roadmap</div>
+  <div style="font-size:13px;color:var(--color-text-secondary)">Click any item to see the implementation code</div>
+</div>
+
+<!-- TIER 1: ONE-LINER CSS -->
+<div class="tier">
+  <div class="tier-head">
+    <span class="tier-label" style="background:var(--color-background-success);color:var(--color-text-success)">One-liner CSS</span>
+    <span class="tier-count">~30 min total · just toggle a class on &lt;html&gt;</span>
+  </div>
+  <div class="grid">
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-arrows-maximize" aria-hidden="true"></i> Bigger Text</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">Scale all text by bumping root font-size.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">/* Add to CSS */
+html.a11y-bigger-text {
+  font-size: 120%;
+}
+
+/* Toggle in JS */
+html.classList.toggle('a11y-bigger-text')</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-text-size" aria-hidden="true"></i> Text Spacing</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">Increase letter, word, and line spacing per WCAG 1.4.12.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-text-spacing * {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+  line-height: 1.7 !important;
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-line-height" aria-hidden="true"></i> Line Height</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">Looser line height for easier reading.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-line-height * {
+  line-height: 2.0 !important;
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-align-left" aria-hidden="true"></i> Text Align</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">Force left-align — removes justified text rivers.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-text-align p,
+html.a11y-text-align li,
+html.a11y-text-align span {
+  text-align: left !important;
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-player-pause" aria-hidden="true"></i> Pause Animations</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">Stop all CSS animations and transitions site-wide.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-pause-animations *,
+html.a11y-pause-animations *::before,
+html.a11y-pause-animations *::after {
+  animation-play-state: paused !important;
+  transition-duration: 0ms !important;
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-eye-off" aria-hidden="true"></i> Hide Images</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">Hide all decorative images, keep alt text visible.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-hide-images img,
+html.a11y-hide-images [role="img"],
+html.a11y-hide-images svg:not([aria-label]) {
+  visibility: hidden !important;
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-link" aria-hidden="true"></i> Highlight Links</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">Bold underline on all anchor tags to make them obvious.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-highlight-links a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+  font-weight: 600 !important;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-droplet" aria-hidden="true"></i> Saturation</span><span class="item-tag" style="background:var(--color-background-success);color:var(--color-text-success)">~5 min</span></div>
+      <div class="item-desc">CSS filter — offer low/off/high as three steps.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-sat-low  body { filter: saturate(0.2) }
+html.a11y-sat-none body { filter: saturate(0)   }
+html.a11y-sat-high body { filter: saturate(2.0) }
+
+/* Cycle through in JS on click */
+const steps = ['', 'a11y-sat-low',
+  'a11y-sat-none', 'a11y-sat-high'];</div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TIER 2: SMALL COMPONENT -->
+<div class="tier">
+  <div class="tier-head">
+    <span class="tier-label" style="background:var(--color-background-warning);color:var(--color-text-warning)">Small component</span>
+    <span class="tier-count">~1–2 hrs each · a bit of JS state needed</span>
+  </div>
+  <div class="grid">
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-contrast" aria-hidden="true"></i> Contrast +</span><span class="item-tag" style="background:var(--color-background-warning);color:var(--color-text-warning)">~1 hr</span></div>
+      <div class="item-desc">Override CSS variables with a high-contrast token set.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">/* Override your design tokens */
+html.a11y-contrast {
+  --color-text-primary: #ffffff;
+  --color-background-primary: #000000;
+  --color-border-primary: #ffffff;
+  /* Map all your tokens to HC values */
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-cursor-text" aria-hidden="true"></i> Cursor</span><span class="item-tag" style="background:var(--color-background-warning);color:var(--color-text-warning)">~1 hr</span></div>
+      <div class="item-desc">Inject a large custom cursor SVG as a fixed overlay div.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">// Create a div that follows mousemove
+const cur = document.createElement('div');
+cur.style.cssText = `position:fixed;
+  width:32px;height:32px;
+  background:#FFD700;border-radius:50%;
+  pointer-events:none;z-index:99999;
+  transform:translate(-50%,-50%)`;
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px';
+  cur.style.top  = e.clientY + 'px';
+});
+// Then: html { cursor: none !important }</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-letter-a" aria-hidden="true"></i> Dyslexia Friendly</span><span class="item-tag" style="background:var(--color-background-warning);color:var(--color-text-warning)">~1 hr</span></div>
+      <div class="item-desc">Load OpenDyslexic from a CDN and apply to body text.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">/* Lazy-load the font only when toggled */
+function enableDyslexia() {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.cdnfonts.com'
+    + '/css/opendyslexic';
+  document.head.appendChild(link);
+  document.documentElement
+    .classList.add('a11y-dyslexia');
+}
+
+html.a11y-dyslexia body {
+  font-family: 'OpenDyslexic' !important;
+}</div>
+      </div></div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="item-top"><span class="item-name"><i class="ti ti-layout-list" aria-hidden="true"></i> Page Structure</span><span class="item-tag" style="background:var(--color-background-warning);color:var(--color-text-warning)">~2 hrs</span></div>
+      <div class="item-desc">Highlight headings and landmark regions with visible outlines.</div>
+      <div class="detail"><div class="detail-inner">
+        <div class="code">html.a11y-structure h1,
+html.a11y-structure h2,
+html.a11y-structure h3 {
+  outline: 2px solid #E85555 !important;
+}
+html.a11y-structure nav,
+html.a11y-structure main,
+html.a11y-structure footer,
+html.a11y-structure section {
+  outline: 2px solid #3DC99A !important;
+}
+/* Add ::before labels via JS for each */</div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SKIP LIST -->
+<div class="rule"></div>
+<div style="margin-bottom:.75rem">
+  <span class="tier-label" style="background:var(--color-background-secondary);color:var(--color-text-tertiary);display:inline-block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px">Skip for now — too complex or not applicable</span>
+</div>
+<div class="grid">
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px">
+    <div class="item-name" style="font-size:13px;margin-bottom:3px"><i class="ti ti-accessible" aria-hidden="true"></i> Screen Reader</div>
+    <div class="skip-why">Not a UI feature — requires correct semantic HTML, ARIA roles, and alt text throughout the whole codebase. Foundational work, not a toggle.</div>
+  </div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px">
+    <div class="item-name" style="font-size:13px;margin-bottom:3px"><i class="ti ti-wand" aria-hidden="true"></i> Smart Contrast</div>
+    <div class="skip-why">Requires per-element contrast ratio calculation at runtime — computationally expensive. Use Contrast+ instead which just swaps tokens.</div>
+  </div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px">
+    <div class="item-name" style="font-size:13px;margin-bottom:3px"><i class="ti ti-help-circle" aria-hidden="true"></i> Tooltips</div>
+    <div class="skip-why">Needs every interactive element to have a <code>title</code> attribute and a custom tooltip renderer — a full audit of the whole codebase.</div>
+  </div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px">
+    <div class="item-name" style="font-size:13px;margin-bottom:3px"><i class="ti ti-book" aria-hidden="true"></i> Dictionary</div>
+    <div class="skip-why">Requires a dictionary API, text selection detection, and a custom popup component. Non-trivial to do well and low usage for a travel app.</div>
+  </div>
+</div>
+
+<!-- IMPLEMENTATION NOTE -->
+<div class="impl-note">
+  <div class="impl-note-title">How to wire all of these up</div>
+  <p>Build one <code>useAccessibility()</code> Zustand store that holds a <code>Set&lt;string&gt;</code> of active class names. On change, sync the whole set to <code>document.documentElement.classList</code> and persist to <code>localStorage</code>. All the CSS classes above live in a single <code>accessibility.css</code> file imported once in <code>main.tsx</code>. The toggle panel becomes a simple list of buttons that call <code>store.toggle('a11y-bigger-text')</code> — no component needs to know about a11y logic at all.</p>
+</div>
+
+</div>
+
+<script>
+function toggle(el){
+  const det=el.querySelector('.detail');
+  const wasOpen=det.classList.contains('open');
+  document.querySelectorAll('.detail.open').forEach(d=>{
+    d.classList.remove('open');
+    d.closest('.item').classList.remove('open');
+  });
+  if(!wasOpen){det.classList.add('open');el.classList.add('open');}
+}
+</script>

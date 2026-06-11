@@ -1,0 +1,28 @@
+Now I have everything I need. Let me build the full interactive roadmap.Here's the full roadmap — click any card to expand its implementation detail.
+
+A few things worth calling out from your actual codebase:
+
+**Biggest problem right now** is the identity clash — you have an almost-great dark-themed mockup started (the file you shared with PitchHeader, GoalOverlay, etc.) but the live app is running a completely different plain CSS light theme. The mockup was heading in exactly the right direction.
+
+**The chatbot** fits cleanly into your existing architecture: your Python backend already has an agent (I saw the `scout_agent.py` in `/app/agents/`), so you're adding a `/chat` endpoint to `main.py` + the front-end chat panel UI. The context injection — passing the user's current mission state, budget, and match schedule into the system prompt — is what makes it feel intelligent rather than generic.
+
+**Real sequence recommendation:**
+1. Fonts + dark mode flip (2–3 hours, biggest visual bang)
+2. Bottom nav component to replace the link bar
+3. Dashboard layout rebuild — kill the `<table>` for the missions list
+4. Then the chatbot panel, since that's the feature you specifically want
+
+The roadmap is interactive — each phase is collapsible and each card expands with a spec. Let me know which phase you want to start actually building.
+
+Click any feature to expand its exact implementation code.
+
+**The real insight here:** every single one of the "one-liner CSS" group is just a class toggle on `<html>`. That means you can build the entire first tier in an afternoon — one `accessibility.css` file, one Zustand store with a `Set` of active classes, and a panel component that calls `toggle()`. No feature is touching React component internals at all.
+
+**Suggested order:**
+1. Write `accessibility.css` with all 8 one-liner classes (30 min)
+2. Create the Zustand store + `localStorage` persistence (20 min)
+3. Build the toggle panel UI (45 min)
+4. Add Contrast+ by mapping your existing Tailwind tokens to high-contrast overrides (1 hr)
+5. Dyslexia Friendly last since it needs a font CDN load
+
+The four skipped features (Screen Reader, Smart Contrast, Tooltips, Dictionary) aren't actually shortcuts — they're each full projects in themselves and would take longer than building all 12 simple ones combined.

@@ -1,0 +1,105 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+default:
+  interruptible: true
+
+backend_lint:
+  stage: lint
+  image: python:3.13-slim
+  script:
+    - python -m compileall -q backend
+
+frontend_lint:
+  stage: lint
+  image: node:22-alpine
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - frontend/.npm/
+  script:
+    - cd frontend
+    - npm ci --cache .npm --prefer-offline
+    - npm run lint
+
+backend_test:
+  stage: test
+  image: python:3.13-slim
+  script:
+    - cd backend
+    - pip install --no-cache-dir -r requirements.txt
+    - python -m unittest discover -s tests -v
+
+frontend_test:
+  stage: test
+  image: node:22-alpine
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+
+backend_build:
+  stage: build
+  image: python:3.13-slim
+  script:
+    - cd backend
+    - python -m pip wheel --no-cache-dir --wheel-dir ../backend-wheels -r requirements.txt
+    - tar -czf ../backend-package.tgz --exclude=tests --exclude=docs .
+  artifacts:
+    expire_in: 7 days
+    paths:
+      - backend-package.tgz
+      - backend-wheels/
+
+frontend_build:
+  stage: build
+  image: node:22-alpine
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    expire_in: 7 days
+    paths:
+      - frontend/dist/
+
+deploy_managed_production:
+  stage: deploy
+  image: curlimages/curl:8.16.0
+  environment:
+    name: production
+    url: $PRODUCTION_URL
+  script:
+    - test -n "$RAILWAY_DEPLOY_HOOK_URL"
+    - test -n "$VERCEL_DEPLOY_HOOK_URL"
+    - curl --fail --show-error --silent --request POST "$RAILWAY_DEPLOY_HOOK_URL"
+    - curl --fail --show-error --silent --request POST "$VERCEL_DEPLOY_HOOK_URL"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+    - when: never
+
+deploy_vps_production:
+  stage: deploy
+  image: alpine:3.22
+  environment:
+    name: production
+    url: $PRODUCTION_URL
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval "$(ssh-agent -s)"
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+  script:
+    - ssh "$DEPLOY_USER@$DEPLOY_HOST" "cd '$DEPLOY_PATH' && git pull --ff-only origin '$CI_COMMIT_BRANCH' && docker compose up -d --build && docker compose ps"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+    - when: never

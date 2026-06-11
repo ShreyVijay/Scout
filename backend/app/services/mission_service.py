@@ -1,5 +1,7 @@
 from app.services.planner import build_trip
 from app.services.mission_store import save_mission
+from app.services.mission_store import get_latest_mission, get_mission_history
+from contracts.mission import MissionResponse
 import uuid
 
 def create_mission(
@@ -41,3 +43,15 @@ def create_mission(
     save_mission(mission)
 
     return mission
+
+
+def get_mission(team: str) -> MissionResponse | None:
+    mission = get_latest_mission(team)
+    return MissionResponse.model_validate(mission) if mission else None
+
+
+def get_history(team: str, size: int = 20) -> list[MissionResponse]:
+    return [
+        MissionResponse.model_validate(mission)
+        for mission in get_mission_history(team, size=size)
+    ]

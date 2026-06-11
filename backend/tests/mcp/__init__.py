@@ -1,0 +1,1 @@
+"""Isolated MCP tool tests."""

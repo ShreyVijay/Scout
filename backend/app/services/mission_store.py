@@ -61,6 +61,16 @@ def get_latest_mission(team):
 
     return mission
 
+
+def get_mission_history(team, size=20):
+    result = es.search(
+        index="missions",
+        size=size,
+        query={"term": {"team": team}},
+        sort=[{"created_at": {"order": "desc"}}],
+    )
+    return [hit["_source"] for hit in result["hits"]["hits"]]
+
 def update_mission(mission):
     mission["updated_at"] = datetime.utcnow().isoformat()
 

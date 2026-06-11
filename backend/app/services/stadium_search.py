@@ -41,6 +41,22 @@ def get_city_stadiums(city_name):
     )
     return [hit["_source"] for hit in result["hits"]["hits"]]
 
+
+def search_stadiums(query_str, size=10):
+    """Full-text stadium search. Elasticsearch access remains in the service layer."""
+    result = es.search(
+        index="stadiums",
+        size=size,
+        query={
+            "multi_match": {
+                "query": query_str,
+                "fields": ["stadium^3", "city^2", "description"],
+                "fuzziness": "AUTO",
+            }
+        },
+    )
+    return [hit["_source"] for hit in result["hits"]["hits"]]
+
 def get_all_stadiums():
     """Retrieve all stadiums, up to 100."""
     result = es.search(

@@ -1,0 +1,495 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.road{padding:1rem 0 2rem}
+.phase-header{display:flex;align-items:center;gap:10px;margin:1.5rem 0 .75rem;cursor:pointer;user-select:none}
+.phase-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.phase-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.phase-sub{font-size:12px;color:var(--color-text-secondary);margin-left:auto}
+.chevron{font-size:12px;color:var(--color-text-tertiary);transition:transform .2s}
+.phase-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;overflow:hidden;transition:max-height .3s,opacity .25s}
+.phase-body.collapsed{max-height:0!important;opacity:0;pointer-events:none}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.card:hover{border-color:var(--color-border-secondary);background:var(--color-background-secondary)}
+.card.active{border-color:var(--color-border-primary)}
+.card-icon{font-size:18px;margin-bottom:8px}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.card-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:20px;margin-top:8px;font-weight:500}
+.pkg-section{margin-top:1.5rem;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px}
+.pkg-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em}
+.pkg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.pkg{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;display:flex;align-items:flex-start;gap:10px}
+.pkg-name{font-size:12px;font-weight:500;color:var(--color-text-primary);font-family:var(--font-mono)}
+.pkg-use{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.pkg-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.detail-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:16px;margin-top:10px;display:none}
+.detail-panel.visible{display:block}
+.detail-h{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px}
+.detail-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.detail-list li{font-size:12px;color:var(--color-text-secondary);padding-left:16px;position:relative;line-height:1.5}
+.detail-list li::before{content:"→";position:absolute;left:0;color:var(--color-text-tertiary)}
+.detail-list li strong{color:var(--color-text-primary);font-weight:500}
+.effort-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.effort-badge{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)}
+.progress-bar{height:3px;border-radius:2px;background:var(--color-border-tertiary);margin:1.5rem 0 .5rem;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width .5s}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+.section-rule{height:.5px;background:var(--color-border-tertiary);margin:1.5rem 0 1rem}
+.chatbot-highlight{border:2px solid var(--color-border-info)!important}
+</style>
+<h2 class="sr-only">Scout app UI/UX improvement roadmap — 6 phases covering design system, navigation, components, pages, chatbot, and animation</h2>
+<div class="road">
+
+<div style="margin-bottom:1.25rem">
+  <div style="font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Scout — UI/UX Rebuild Roadmap</div>
+  <div style="font-size:13px;color:var(--color-text-secondary)">6 phases · WC2026 travel companion · React + Vite + TailwindV4</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#535AC8"></div>Foundation</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>Components</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#BA7517"></div>Pages</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3B8BD4"></div>Chatbot</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#D4537E"></div>Motion</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#888780"></div>DX</div>
+</div>
+
+<!-- PHASE 1 -->
+<div class="phase-header" onclick="togglePhase(1)">
+  <div class="phase-num" style="background:#EEEDFE;color:#3C3489">1</div>
+  <div class="phase-title">Design foundation</div>
+  <div class="phase-sub">Week 1</div>
+  <span class="chevron" id="chev-1">▼</span>
+</div>
+<div class="phase-body" id="phase-1" style="max-height:600px">
+  <div class="card" onclick="showDetail('tokens')">
+    <div class="card-icon"><i class="ti ti-palette" aria-hidden="true"></i></div>
+    <div class="card-title">Token system</div>
+    <div class="card-desc">Replace plain CSS with a Tailwind v4 token file — 5 surfaces, 3 text levels, semantic colors, 8pt grid spacing.</div>
+    <div><span class="tag" style="background:#EEEDFE;color:#3C3489">Critical</span></div>
+  </div>
+  <div class="card" onclick="showDetail('typography')">
+    <div class="card-icon"><i class="ti ti-typography" aria-hidden="true"></i></div>
+    <div class="card-title">Typography stack</div>
+    <div class="card-desc">Space Grotesk (display + UI), Inter (body), Space Mono (data/mono). Type scale with clamp() for fluid sizing.</div>
+    <div><span class="tag" style="background:#EEEDFE;color:#3C3489">Critical</span></div>
+  </div>
+  <div class="card" onclick="showDetail('icons')">
+    <div class="card-icon"><i class="ti ti-box" aria-hidden="true"></i></div>
+    <div class="card-title">Icon package</div>
+    <div class="card-desc">Replace bare emoji with Phosphor Icons (duotone style) + Flagpack for nation flags. Consistent 20/24px grid.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('darkmode')">
+    <div class="card-icon"><i class="ti ti-moon" aria-hidden="true"></i></div>
+    <div class="card-title">Dark mode first</div>
+    <div class="card-desc">Deep pitch-black base (#050710), 3-tier surface system. Current bg is light gray — flip the whole app to dark-native.</div>
+    <div><span class="tag" style="background:#EEEDFE;color:#3C3489">Critical</span></div>
+  </div>
+</div>
+<div class="detail-panel" id="detail-tokens">
+  <div class="detail-h">Token system — what to build</div>
+  <ul class="detail-list">
+    <li>Create <strong>tokens.css</strong> with @theme in Tailwind v4 format — surfaces: base, surface, card, elevated, overlay</li>
+    <li>Semantic palette: amber (primary), green (success/live), orange (warning/replan), gold (goal/hero), red (alert)</li>
+    <li>Text ramp: t1 (#EFF3FF headlines), t2 (#7B8FB5 body), t3 (#44607C labels only)</li>
+    <li>8pt grid spacing via Tailwind spacing scale — drop ad-hoc margin/padding values</li>
+    <li>Border system: hairline (5% white), border (9% white), focus ring (amber 40%)</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~2 days</span><span class="effort-badge">No user-facing changes</span></div>
+</div>
+<div class="detail-panel" id="detail-typography">
+  <div class="detail-h">Typography — font pairings</div>
+  <ul class="detail-list">
+    <li>Load Space Grotesk from Google Fonts (weights 400, 500, 600, 700) — used for all UI chrome, buttons, headings</li>
+    <li>Inter (var) for body copy, descriptions, metadata — superior readability at 12–14px</li>
+    <li>Space Mono for scores, countdowns, stats, budget numbers — unmistakably numeric identity</li>
+    <li>Fluid scale with clamp(): xs=10px, sm=12, base=14, lg=16, xl=20, 2xl=28, 3xl=40</li>
+    <li>Letter-spacing rules: headers -0.02em, mono data +0.04em, eyebrows +0.1em uppercase</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~1 day</span><span class="effort-badge">Biggest single visual uplift</span></div>
+</div>
+<div class="detail-panel" id="detail-icons">
+  <div class="detail-h">Icon package — Phosphor React</div>
+  <ul class="detail-list">
+    <li>Install <strong>@phosphor-icons/react</strong> — 9000+ icons, 6 weights, tree-shakeable</li>
+    <li>Use Duotone weight for feature icons, Regular for nav, Bold for CTAs</li>
+    <li>Install <strong>flagpack-react</strong> or use emoji-flag + custom SVG flags for team context</li>
+    <li>Build an <strong>&lt;Icon&gt;</strong> wrapper with standardized size props (xs=14, sm=16, md=20, lg=24, xl=32)</li>
+    <li>Audit every emoji in the codebase → replace with proper icon component (except flag emojis in pitch header)</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~1 day</span><span class="effort-badge">npm install @phosphor-icons/react</span></div>
+</div>
+<div class="detail-panel" id="detail-darkmode">
+  <div class="detail-h">Dark mode — full inversion</div>
+  <ul class="detail-list">
+    <li>Current theme is light (#f5f5f7 bg, #1a1a2e nav) — inconsistent hybrid. Pick dark-native and commit fully</li>
+    <li>Pitch black base: #05070D, surface: #090D1C, card: #0E1424 — already proven in the mockup file</li>
+    <li>Add optional light mode via Tailwind's <strong>dark:</strong> variant if needed, but dark-first for the World Cup context</li>
+    <li>Stadium floodlight glow ambient effects using CSS radial-gradient on hero sections only</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~1 day</span><span class="effort-badge">Visual identity moment</span></div>
+</div>
+
+<!-- PHASE 2 -->
+<div class="phase-header" onclick="togglePhase(2)">
+  <div class="phase-num" style="background:#E1F5EE;color:#085041">2</div>
+  <div class="phase-title">Navigation & app shell</div>
+  <div class="phase-sub">Week 1–2</div>
+  <span class="chevron" id="chev-2">▼</span>
+</div>
+<div class="phase-body" id="phase-2" style="max-height:600px">
+  <div class="card" onclick="showDetail('bottomnav')">
+    <div class="card-icon"><i class="ti ti-layout-bottombar" aria-hidden="true"></i></div>
+    <div class="card-title">Bottom nav (mobile)</div>
+    <div class="card-desc">Replace the top link bar with a 5-tab bottom nav: Dashboard · Missions · Scout AI · Cities · Profile. 60px tall, 44px tap targets.</div>
+    <div><span class="tag" style="background:#EEEDFE;color:#3C3489">Critical</span></div>
+  </div>
+  <div class="card" onclick="showDetail('sidebar')">
+    <div class="card-icon"><i class="ti ti-layout-sidebar" aria-hidden="true"></i></div>
+    <div class="card-title">Collapsible sidebar (desktop)</div>
+    <div class="card-desc">72px icon rail that expands to 240px on hover. Branded logo, mission context, quick match status pill at top.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('topbar')">
+    <div class="card-icon"><i class="ti ti-brand-appgallery" aria-hidden="true"></i></div>
+    <div class="card-title">Mission context bar</div>
+    <div class="card-desc">Sticky 56px bar showing active team flag + match mode indicator (monitoring / live / replanning) at all times.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('shell')">
+    <div class="card-icon"><i class="ti ti-apps" aria-hidden="true"></i></div>
+    <div class="card-title">App shell & routing</div>
+    <div class="card-desc">Persistent layout with &lt;Outlet&gt;, animated page transitions via Framer Motion's AnimatePresence, scroll restoration.</div>
+    <div><span class="tag" style="background:#FAEEDA;color:#633806">Medium</span></div>
+  </div>
+</div>
+<div class="detail-panel" id="detail-bottomnav">
+  <div class="detail-h">Bottom nav — architecture</div>
+  <ul class="detail-list">
+    <li>5 tabs: <strong>Home</strong> (dashboard), <strong>Missions</strong>, <strong>Scout AI</strong> (chatbot, center tab with glow), <strong>Cities</strong>, <strong>Me</strong></li>
+    <li>Active tab: icon + label + amber underline pill. Inactive: icon only, muted color</li>
+    <li>Center Scout AI tab is oversized (52px circle) with amber glow — the chatbot entry point lives here</li>
+    <li>Safe area inset support for iOS notch: padding-bottom: env(safe-area-inset-bottom)</li>
+    <li>Animate active indicator sliding between tabs with Framer Motion layoutId</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~2 days</span><span class="effort-badge">framer-motion required</span></div>
+</div>
+<div class="detail-panel" id="detail-sidebar">
+  <div class="detail-h">Sidebar — desktop layout</div>
+  <ul class="detail-list">
+    <li>Rail mode (72px): shows logo, nav icons, and avatar only</li>
+    <li>Expanded (240px): shows labels, active mission name, budget summary, quick-action buttons</li>
+    <li>Transition: Framer Motion width animation on hover/toggle, children fade in with delay</li>
+    <li>Bottom of sidebar: settings gear + user avatar with notification dot</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~2 days</span><span class="effort-badge">Desktop only (≥1024px)</span></div>
+</div>
+
+<!-- PHASE 3 -->
+<div class="phase-header" onclick="togglePhase(3)">
+  <div class="phase-num" style="background:#E1F5EE;color:#085041">3</div>
+  <div class="phase-title">Component library</div>
+  <div class="phase-sub">Week 2–3</div>
+  <span class="chevron" id="chev-3">▼</span>
+</div>
+<div class="phase-body" id="phase-3" style="max-height:600px">
+  <div class="card" onclick="showDetail('matchcard')">
+    <div class="card-icon"><i class="ti ti-ball-football" aria-hidden="true"></i></div>
+    <div class="card-title">Match card</div>
+    <div class="card-desc">Full pitch-header hero card with grass texture, floodlight glows, score display, live pulsing indicator. Reusable across all match contexts.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('timeline')">
+    <div class="card-icon"><i class="ti ti-timeline" aria-hidden="true"></i></div>
+    <div class="card-title">Journey timeline</div>
+    <div class="card-desc">Visual city-to-city route with animated connector lines. Nodes for done/active/next/projected states. Framer Motion path drawing on mount.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('alertfeed')">
+    <div class="card-icon"><i class="ti ti-bell-ringing" aria-hidden="true"></i></div>
+    <div class="card-title">Intelligence alert feed</div>
+    <div class="card-desc">Replace the raw div alerts with a stacked feed: swipe-to-dismiss, type icons, source logos (Amadeus, Ticketmaster), animated entry.</div>
+    <div><span class="tag" style="background:#FAEEDA;color:#633806">Medium</span></div>
+  </div>
+  <div class="card" onclick="showDetail('budgetcard')">
+    <div class="card-icon"><i class="ti ti-chart-donut" aria-hidden="true"></i></div>
+    <div class="card-title">Budget ring card</div>
+    <div class="card-desc">Animated SVG donut chart showing spend breakdown. Segments: flights, hotels, tickets, food. Tap segment to drill down.</div>
+    <div><span class="tag" style="background:#FAEEDA;color:#633806">Medium</span></div>
+  </div>
+  <div class="card" onclick="showDetail('statsrow')">
+    <div class="card-icon"><i class="ti ti-layout-columns" aria-hidden="true"></i></div>
+    <div class="card-title">Stats strip</div>
+    <div class="card-desc">3-column scannable strip for key mission facts. Replace the raw table rows on Dashboard with this reusable stat component.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('mapcard')">
+    <div class="card-icon"><i class="ti ti-map-2" aria-hidden="true"></i></div>
+    <div class="card-title">Map card</div>
+    <div class="card-desc">Wrap the existing MapView/ItineraryMap components in a dark-styled card with expand-to-fullscreen button and legend overlay.</div>
+    <div><span class="tag" style="background:#FAEEDA;color:#633806">Medium</span></div>
+  </div>
+</div>
+<div class="detail-panel" id="detail-matchcard">
+  <div class="detail-h">Match card — full spec</div>
+  <ul class="detail-list">
+    <li>PitchHeader: CSS repeating-linear-gradient grass stripes, amber floodlight radial glows at corners</li>
+    <li>Score display: Space Mono 52px, letter-spacing -0.06em — this is the hero number</li>
+    <li>Live mode: pulsing green dot (CSS keyframes), "LIVE · VENUE · 67'" in Space Mono</li>
+    <li>3 card variants: Monitoring (countdown), Live (score + win %) , Replanning (action banner)</li>
+    <li>Tap on score → triggers GoalOverlay full-screen animation with confetti burst</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~3 days</span><span class="effort-badge">framer-motion + CSS</span></div>
+</div>
+<div class="detail-panel" id="detail-alertfeed">
+  <div class="detail-h">Alert feed — replacing raw divs</div>
+  <ul class="detail-list">
+    <li>Use <strong>sonner</strong> for toast notifications + a persistent IntelligenceFeed component for dashboard</li>
+    <li>Each alert: source logo (Amadeus bird, Ticketmaster T), type icon, severity color left border</li>
+    <li>Framer Motion: staggered list entry animation (staggerChildren: 0.08s)</li>
+    <li>Swipe-to-dismiss gesture on mobile using Framer Motion drag with dragConstraints</li>
+    <li>Mark-as-read state with localStorage persistence via Zustand store</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~2 days</span><span class="effort-badge">sonner + framer-motion</span></div>
+</div>
+
+<!-- PHASE 4 -->
+<div class="phase-header" onclick="togglePhase(4)">
+  <div class="phase-num" style="background:#FAEEDA;color:#633806">4</div>
+  <div class="phase-title">Page redesigns</div>
+  <div class="phase-sub">Week 3–4</div>
+  <span class="chevron" id="chev-4">▼</span>
+</div>
+<div class="phase-body" id="phase-4" style="max-height:600px">
+  <div class="card" onclick="showDetail('dashboard')">
+    <div class="card-icon"><i class="ti ti-dashboard" aria-hidden="true"></i></div>
+    <div class="card-title">Dashboard → Command centre</div>
+    <div class="card-desc">Kill the table. Replace with: Hero match card at top, 3-stat strip, journey timeline, intelligence feed, saved recs grid.</div>
+    <div><span class="tag" style="background:#EEEDFE;color:#3C3489">Critical</span></div>
+  </div>
+  <div class="card" onclick="showDetail('missionpage')">
+    <div class="card-icon"><i class="ti ti-target" aria-hidden="true"></i></div>
+    <div class="card-title">Mission page</div>
+    <div class="card-desc">Full-bleed map background, floating card panel, tabbed sections (overview, budget, itinerary, hotels, food) with scroll-snap.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('homepage')">
+    <div class="card-icon"><i class="ti ti-home" aria-hidden="true"></i></div>
+    <div class="card-title">Home / onboarding</div>
+    <div class="card-desc">Animated pitch hero, team selector with flag grid, travel style picker, budget slider — converts the form into a step-by-step flow.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+  <div class="card" onclick="showDetail('citiespage')">
+    <div class="card-icon"><i class="ti ti-building-skyscraper" aria-hidden="true"></i></div>
+    <div class="card-title">Cities & Stadiums pages</div>
+    <div class="card-desc">Masonry card grid with venue photos, capacity rings, weather widget, distance from city centre. Filter bar with smooth layout animation.</div>
+    <div><span class="tag" style="background:#FAEEDA;color:#633806">Medium</span></div>
+  </div>
+  <div class="card" onclick="showDetail('replanpage')">
+    <div class="card-icon"><i class="ti ti-route" aria-hidden="true"></i></div>
+    <div class="card-title">Replanning flow</div>
+    <div class="card-desc">Step-by-step modal flow: show old route vs new route side by side, budget delta, confirm/dismiss with animated route change on the map.</div>
+    <div><span class="tag" style="background:#E1F5EE;color:#0F6E56">High</span></div>
+  </div>
+</div>
+<div class="detail-panel" id="detail-dashboard">
+  <div class="detail-h">Dashboard — layout blueprint</div>
+  <ul class="detail-list">
+    <li><strong>Row 1:</strong> Hero match card (full width) — monitoring/live/replanning variant auto-detected</li>
+    <li><strong>Row 2:</strong> 3-column stats strip — team status, score/countdown, budget health</li>
+    <li><strong>Row 3:</strong> Journey timeline (full width) — visual city route</li>
+    <li><strong>Row 4:</strong> 2-col grid — Intelligence feed (left) + Quick actions (right)</li>
+    <li><strong>Row 5:</strong> Saved recommendations as horizontal scroll card row</li>
+    <li>Each section separated by 24px gap, no visible card borders between major rows</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~3 days</span><span class="effort-badge">Biggest user-facing change</span></div>
+</div>
+
+<!-- PHASE 5 — CHATBOT (highlighted) -->
+<div class="phase-header" onclick="togglePhase(5)">
+  <div class="phase-num" style="background:#E6F1FB;color:#0C447C">5</div>
+  <div class="phase-title">Scout AI chatbot</div>
+  <div class="phase-sub">Week 4–5</div>
+  <span class="chevron" id="chev-5">▼</span>
+</div>
+<div class="phase-body" id="phase-5" style="max-height:600px">
+  <div class="card chatbot-highlight" onclick="showDetail('chatfab')">
+    <div class="card-icon"><i class="ti ti-message-chatbot" aria-hidden="true"></i></div>
+    <div class="card-title">Floating chat entry</div>
+    <div class="card-desc">52px FAB bottom-right with animated pulsing ring. On tap: sheet slides up from bottom (mobile) or panel slides from right (desktop).</div>
+    <div><span class="tag" style="background:#E6F1FB;color:#185FA5">Chatbot</span></div>
+  </div>
+  <div class="card chatbot-highlight" onclick="showDetail('chatpanel')">
+    <div class="card-icon"><i class="ti ti-message-dots" aria-hidden="true"></i></div>
+    <div class="card-title">Chat panel UI</div>
+    <div class="card-desc">Bubble-style messages, typing indicator, message timestamps, action cards inline (e.g. "Book this hotel" buttons inside bot replies).</div>
+    <div><span class="tag" style="background:#E6F1FB;color:#185FA5">Chatbot</span></div>
+  </div>
+  <div class="card chatbot-highlight" onclick="showDetail('chatcontext')">
+    <div class="card-icon"><i class="ti ti-brain" aria-hidden="true"></i></div>
+    <div class="card-title">Context-aware agent</div>
+    <div class="card-desc">Bot receives current mission state, active city, budget remaining, match schedule — answers are grounded in the user's actual trip data.</div>
+    <div><span class="tag" style="background:#E6F1FB;color:#185FA5">Chatbot</span></div>
+  </div>
+  <div class="card chatbot-highlight" onclick="showDetail('chatprompts')">
+    <div class="card-icon"><i class="ti ti-sparkles" aria-hidden="true"></i></div>
+    <div class="card-title">Quick prompt chips</div>
+    <div class="card-desc">Pre-built prompt pills above the input: "Best fan zones near stadium" · "Rebook my hotel" · "Is my route still optimal?" — disappear on first use.</div>
+    <div><span class="tag" style="background:#E6F1FB;color:#185FA5">Chatbot</span></div>
+  </div>
+</div>
+<div class="detail-panel" id="detail-chatfab">
+  <div class="detail-h">Chat FAB — entry point design</div>
+  <ul class="detail-list">
+    <li>Amber glow FAB (52px, rounded circle) with ⚡ or compass icon — not a generic chat bubble</li>
+    <li>Pulsing amber ring animation when a new intelligence alert is available (unread badge)</li>
+    <li>On mobile: <strong>Bottom sheet</strong> 80vh with handle bar, slides up with spring animation</li>
+    <li>On desktop: <strong>Side panel</strong> 380px wide, slides in from right, pushes content or overlays</li>
+    <li>Close gesture: swipe down (mobile) or click-outside (desktop)</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~2 days</span><span class="effort-badge">framer-motion sheet</span></div>
+</div>
+<div class="detail-panel" id="detail-chatpanel">
+  <div class="detail-h">Chat panel — message UI spec</div>
+  <ul class="detail-list">
+    <li>User messages: right-aligned, amber tinted bubble, Space Grotesk 14px</li>
+    <li>Agent messages: left-aligned, card-surface bubble, agent avatar (⚽ scout logo)</li>
+    <li>Typing indicator: 3 bouncing dots in Inter style, amber color, Framer Motion stagger</li>
+    <li>Inline action cards: when bot suggests a hotel/route, render a mini &lt;RecommendationCard&gt; inside the message</li>
+    <li>Sticky input bar: textarea with auto-resize, send button, voice input icon (future)</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~3 days</span><span class="effort-badge">Core chatbot feature</span></div>
+</div>
+<div class="detail-panel" id="detail-chatcontext">
+  <div class="detail-h">Context injection — what the bot knows</div>
+  <ul class="detail-list">
+    <li>System prompt includes: active team, all matches with dates/venues, current city, budget remaining, travel style preference</li>
+    <li>Inject real-time data: current match mode (monitoring/live/replanning) from Zustand global store</li>
+    <li>Tool calls: bot can trigger replan flow, save a recommendation, or open a map view directly from chat</li>
+    <li>Conversation history stored in Zustand, persisted to localStorage — survives page navigations</li>
+    <li>Connect to existing <strong>backend Python agent</strong> via /api/chat endpoint addition to main.py</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~3 days</span><span class="effort-badge">Backend work needed</span></div>
+</div>
+<div class="detail-panel" id="detail-chatprompts">
+  <div class="detail-h">Quick prompts — context-sensitive chips</div>
+  <ul class="detail-list">
+    <li>Prompts change based on mission state: in Monitoring → "What should I pack?", "Best arrival time?"; in Live → "Any red card risks?"; in Replanning → "Is Seattle cheaper than Chicago?"</li>
+    <li>Rendered as scrollable horizontal chip row above input field</li>
+    <li>Each chip: 32px pill, amber border, muted text — tap sends message immediately</li>
+    <li>After sending, chip fades out via Framer Motion exit animation</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~1 day</span><span class="effort-badge">High perceived intelligence</span></div>
+</div>
+
+<!-- PHASE 6 -->
+<div class="phase-header" onclick="togglePhase(6)">
+  <div class="phase-num" style="background:#FBEAF0;color:#72243E">6</div>
+  <div class="phase-title">Motion & polish</div>
+  <div class="phase-sub">Week 5–6</div>
+  <span class="chevron" id="chev-6">▼</span>
+</div>
+<div class="phase-body" id="phase-6" style="max-height:600px">
+  <div class="card" onclick="showDetail('pagetrans')">
+    <div class="card-icon"><i class="ti ti-transition-right" aria-hidden="true"></i></div>
+    <div class="card-title">Page transitions</div>
+    <div class="card-desc">AnimatePresence wrapping &lt;Routes&gt;. Slide-left on forward navigation, slide-right on back. Fade for modal-style pages.</div>
+    <div><span class="tag" style="background:#FBEAF0;color:#72243E">Motion</span></div>
+  </div>
+  <div class="card" onclick="showDetail('microint')">
+    <div class="card-icon"><i class="ti ti-hand-click" aria-hidden="true"></i></div>
+    <div class="card-title">Micro-interactions</div>
+    <div class="card-desc">Button scale on press (0.97), card lift on hover, score counter number roll, budget bar fill animation on load.</div>
+    <div><span class="tag" style="background:#FBEAF0;color:#72243E">Motion</span></div>
+  </div>
+  <div class="card" onclick="showDetail('goaloverlay')">
+    <div class="card-icon"><i class="ti ti-confetti" aria-hidden="true"></i></div>
+    <div class="card-title">Goal overlay / celebrations</div>
+    <div class="card-desc">Full-screen GOAAAL! overlay with Framer Motion ball bounce + word slam animation + canvas confetti. Auto-dismiss at 3.2s.</div>
+    <div><span class="tag" style="background:#FBEAF0;color:#72243E">Motion</span></div>
+  </div>
+  <div class="card" onclick="showDetail('loading')">
+    <div class="card-icon"><i class="ti ti-loader" aria-hidden="true"></i></div>
+    <div class="card-title">Loading skeletons</div>
+    <div class="card-desc">Replace "Loading missions..." text with shimmer skeleton cards matching the exact shape of each component — kills the layout shift.</div>
+    <div><span class="tag" style="background:#FAEEDA;color:#633806">Medium</span></div>
+  </div>
+</div>
+<div class="detail-panel" id="detail-pagetrans">
+  <div class="detail-h">Page transitions — implementation</div>
+  <ul class="detail-list">
+    <li>Wrap &lt;Routes&gt; in &lt;AnimatePresence mode="wait"&gt; — wait ensures exit before enter</li>
+    <li>Each page exports a &lt;motion.div&gt; as its root with variants: {enter: slide-in, exit: slide-out}</li>
+    <li>Direction detection: compare route depth to determine forward vs back slide direction</li>
+    <li>Duration: 220ms enter, 180ms exit — fast enough to feel responsive, not abrupt</li>
+    <li>Respect prefers-reduced-motion: use opacity-only fade as fallback</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~1 day</span><span class="effort-badge">framer-motion AnimatePresence</span></div>
+</div>
+<div class="detail-panel" id="detail-microint">
+  <div class="detail-h">Micro-interactions — priority list</div>
+  <ul class="detail-list">
+    <li><strong>Buttons:</strong> whileTap={{ scale: 0.97 }} on all interactive buttons — 1 line per button</li>
+    <li><strong>Cards:</strong> whileHover={{ y: -2 }} with shadow transition on mission/recommendation cards</li>
+    <li><strong>Score counter:</strong> useSpring animating from 0 → actual score on first render of match card</li>
+    <li><strong>Budget bar:</strong> Framer Motion width animation from 0% → actual% on mount (0.8s ease-out)</li>
+    <li><strong>Nav active pill:</strong> layoutId shared between nav items so it slides between them</li>
+  </ul>
+  <div class="effort-row"><span class="effort-badge">~2 days</span><span class="effort-badge">High perceived quality</span></div>
+</div>
+
+<!-- PACKAGES SECTION -->
+<div class="section-rule"></div>
+<div class="pkg-section">
+  <div class="pkg-title">Packages to install</div>
+  <div class="pkg-grid">
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-player-play" aria-hidden="true"></i></div><div><div class="pkg-name">framer-motion</div><div class="pkg-use">All animation, page transitions, drag gestures</div></div></div>
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-icons" aria-hidden="true"></i></div><div><div class="pkg-name">@phosphor-icons/react</div><div class="pkg-use">Replace all emoji icons, 6 weights</div></div></div>
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-bell" aria-hidden="true"></i></div><div><div class="pkg-name">sonner</div><div class="pkg-use">Toast notifications for alerts</div></div></div>
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-layout-bottombar" aria-hidden="true"></i></div><div><div class="pkg-name">vaul</div><div class="pkg-use">Bottom sheet for mobile chat panel</div></div></div>
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-confetti" aria-hidden="true"></i></div><div><div class="pkg-name">canvas-confetti</div><div class="pkg-use">Goal celebration screen burst</div></div></div>
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-paint" aria-hidden="true"></i></div><div><div class="pkg-name">clsx + tailwind-merge</div><div class="pkg-use">Clean conditional class strings (cn utility)</div></div></div>
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-calendar" aria-hidden="true"></i></div><div><div class="pkg-name">date-fns</div><div class="pkg-use">Match countdown, date formatting</div></div></div>
+    <div class="pkg"><div class="pkg-icon"><i class="ti ti-circle-check" aria-hidden="true"></i></div><div><div class="pkg-name">@radix-ui/react-dialog</div><div class="pkg-use">Accessible modal for replanning flow</div></div></div>
+  </div>
+</div>
+
+<!-- QUICK WINS -->
+<div class="section-rule"></div>
+<div style="background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-lg);padding:16px">
+  <div style="font-size:13px;font-weight:500;color:var(--color-text-info);margin-bottom:10px">Start here — 3 quick wins this week</div>
+  <ul class="detail-list">
+    <li>Load <strong>Space Grotesk + Inter + Space Mono</strong> from Google Fonts in index.html — typography alone transforms the feel</li>
+    <li>Replace <strong>#f5f5f7 background</strong> with <strong>#05070D</strong> and nav from #1a1a2e to #090D1C — dark-first in 10 minutes</li>
+    <li>Add <strong>bottom nav component</strong> and wire up the 5 routes — removes the plain link bar immediately</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+const details={tokens:1,typography:1,icons:1,darkmode:1,bottomnav:1,sidebar:1,topbar:0,shell:0,matchcard:1,timeline:0,alertfeed:1,budgetcard:0,statsrow:0,mapcard:0,dashboard:1,missionpage:0,homepage:0,citiespage:0,replanpage:0,chatfab:1,chatpanel:1,chatcontext:1,chatprompts:1,pagetrans:1,microint:1,goaloverlay:0,loading:0};
+let openDetail=null;
+function showDetail(id){
+  const el=document.getElementById('detail-'+id);
+  if(!el)return;
+  if(openDetail&&openDetail!==id){
+    const prev=document.getElementById('detail-'+openDetail);
+    if(prev)prev.classList.remove('visible');
+  }
+  el.classList.toggle('visible');
+  openDetail=el.classList.contains('visible')?id:null;
+}
+function togglePhase(n){
+  const body=document.getElementById('phase-'+n);
+  const chev=document.getElementById('chev-'+n);
+  const collapsed=body.classList.toggle('collapsed');
+  chev.style.transform=collapsed?'rotate(-90deg)':'rotate(0deg)';
+  if(collapsed){body.style.maxHeight='0';}else{body.style.maxHeight='600px';}
+}
+</script>

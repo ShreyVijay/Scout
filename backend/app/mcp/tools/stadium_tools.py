@@ -1,14 +1,13 @@
-from app.mcp.elastic_client import get_elastic_client
 from app.mcp.schemas import error_response, success_response
-from app.services.stadium_search import (
-    get_city_stadiums as service_get_city_stadiums,
-    get_stadium as service_get_stadium
-)
+from app.services.stadium_search import get_city_stadiums as service_get_city_stadiums
+from app.services.stadium_service import get_stadium as service_get_stadium
+from app.services.stadium_service import search_stadiums as service_search_stadiums
 
 
 def get_stadium(stadium: str):
     try:
-        return success_response(service_get_stadium(stadium))
+        result = service_get_stadium(stadium)
+        return success_response(result.model_dump(mode="json") if result else None)
     except Exception as exc:
         return error_response(exc)
 
@@ -22,54 +21,7 @@ def get_city_stadiums(city: str):
 
 def search_stadiums(query: str, size: int = 10):
     try:
-        es = get_elastic_client()
-        result = es.search(
-            index="stadiums",
-            size=size,
-            query={
-                "bool": {
-                    "should": [
-                        {
-                            "multi_match": {
-                                "query": query,
-                                "fields": [
-                                    "description"
-                                ],
-                                "fuzziness": "AUTO"
-                            }
-                        },
-                        {
-                            "wildcard": {
-                                "stadium": {
-                                    "value": f"*{query}*",
-                                    "boost": 3.0,
-                                    "case_insensitive": True
-                                }
-                            }
-                        },
-                        {
-                            "wildcard": {
-                                "city": {
-                                    "value": f"*{query}*",
-                                    "boost": 2.0,
-                                    "case_insensitive": True
-                                }
-                            }
-                        }
-                    ],
-                    "minimum_should_match": 1
-                }
-            }
-        )
-        stadiums = [
-            hit["_source"]
-            for hit in result["hits"]["hits"]
-        ]
-        return success_response(
-            stadiums,
-            metadata={
-                "source_index": "stadiums"
-            }
-        )
+        stadiums = service_search_stadiums(query, size)
+        return success_response([item.model_dump(mode="json") for item in stadiums])
     except Exception as exc:
         return error_response(exc)
