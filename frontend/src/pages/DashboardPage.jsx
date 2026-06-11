@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getMissions } from '../services/api';
+import { HeroLive, GoalOverlay } from '../components/PitchUI';
 
 const alerts = [
   {
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const [savedRecs, setSavedRecs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [goalVisible, setGoalVisible] = useState(false);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -92,6 +94,10 @@ export default function DashboardPage() {
           <span>Saved recommendations</span>
           <strong>{savedRecs.length}</strong>
         </div>
+      </section>
+
+      <section style={{ marginBottom: '24px' }}>
+        <HeroLive onGoal={() => setGoalVisible(true)} />
       </section>
 
       <div className="grid-2">
@@ -183,6 +189,12 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+
+      <GoalOverlay
+        visible={goalVisible}
+        scorer="Brazil route momentum changed"
+        onDismiss={() => setGoalVisible(false)}
+      />
     </div>
   );
 }

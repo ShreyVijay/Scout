@@ -25,10 +25,15 @@ class GoogleClientSingleton:
     @classmethod
     def get_genai_client(cls):
         if not cls._genai_client:
-            api_key = get_secret("GOOGLE_GEMINI_API_KEY")
-            if not api_key:
-                raise ValueError("GOOGLE_GEMINI_API_KEY not found")
-            cls._genai_client = genai.Client(api_key=api_key)
+            project_id = get_secret("GCP_PROJECT_ID")
+            if project_id:
+                # Use Vertex AI via Application Default Credentials (Cloud Credits)
+                cls._genai_client = genai.Client(vertexai=True, project=project_id, location="us-central1")
+            else:
+                api_key = get_secret("GOOGLE_GEMINI_API_KEY")
+                if not api_key:
+                    raise ValueError("GCP_PROJECT_ID or GOOGLE_GEMINI_API_KEY must be provided")
+                cls._genai_client = genai.Client(api_key=api_key)
         return cls._genai_client
 
 

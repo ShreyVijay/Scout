@@ -1,9 +1,5 @@
 import os
 import logging
-from dotenv import load_dotenv
-
-# Optional local environment fallback
-load_dotenv()
 
 # We only import google.cloud.secretmanager when we need it
 # to gracefully handle cases where ADC is not set up during early dev

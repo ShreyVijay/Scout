@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter()
 
@@ -11,6 +11,11 @@ class MissionCreateRequest(BaseModel):
     budget: int
     travel_style: str
     objective: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    context: dict = Field(default_factory=dict)
 
 
 # ── POST /mission ───────────────────────────────────────────────
@@ -89,26 +94,24 @@ def replan_endpoint(team: str):
 
 @router.get("/cities")
 def get_cities_endpoint():
-    from app.services.city_search import get_all_cities
-
     try:
+        from app.services.city_search import get_all_cities
         cities = get_all_cities()
         return {"cities": cities}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        return {"cities": []}
 
 
 # ── GET /stadiums ───────────────────────────────────────────────
 
 @router.get("/stadiums")
 def get_stadiums_endpoint():
-    from app.services.stadium_search import get_all_stadiums
-
     try:
+        from app.services.stadium_search import get_all_stadiums
         stadiums = get_all_stadiums()
         return {"stadiums": stadiums}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        return {"stadiums": []}
 
 
 # ── GET /budget/{team} ─────────────────────────────────────────
@@ -188,9 +191,9 @@ def get_stadium_detail_endpoint(stadium: str):
 # ── GET /user ──────────────────────────────────────────────────
 
 @router.get("/user")
-def get_user_endpoint():
+def get_user_endpoint(email: str):
     from app.services.user_store import get_user
-    user = get_user("default-fan")
+    user = get_user(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -211,10 +214,10 @@ class UserUpdateRequest(BaseModel):
 @router.post("/user")
 def update_user_endpoint(request: UserUpdateRequest):
     from app.services.user_store import get_user, save_user
-    user = get_user("default-fan")
+    user = get_user(request.email)
     if not user:
         user = {
-            "user_id": "default-fan",
+            "user_id": request.email,
             "email": request.email,
             "name": request.name,
             "preferences": {
@@ -261,3 +264,48 @@ def get_all_missions_endpoint():
     except Exception as e:
         return {"missions": []}
 
+
+@router.post("/chat")
+def chat_endpoint(request: ChatRequest):
+    message = request.message.strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Message is required")
+
+    lower_message = message.lower()
+    surface = request.context.get("surface", "Scout")
+    saved_count = len(request.context.get("saved_recommendations", []))
+
+    if "replan" in lower_message or "route" in lower_message:
+        reply = (
+            "Open the replanning flow for the active team, generate a recommendation, "
+            "then compare the top ranked city against your budget and transport scores."
+        )
+        action = "open_replanning"
+    elif "budget" in lower_message or "cost" in lower_message:
+        reply = (
+            "Check Budget Intelligence first: total budget, spent amount, projected "
+            "remaining budget, and risk badge. If the badge is medium or higher, re-run "
+            "the route before booking."
+        )
+        action = "review_budget"
+    elif "city" in lower_message or "stadium" in lower_message:
+        reply = (
+            "Use City Intelligence for atmosphere, budget, transport, and fan-zone scores. "
+            "Use Stadiums when venue capacity and host city context matter more than price."
+        )
+        action = "open_city_intelligence"
+    else:
+        reply = (
+            "I can help you decide whether to monitor, replan, or save a recommendation. "
+            f"You are currently on {surface}, with {saved_count} saved recommendations."
+        )
+        action = "explain_context"
+
+    return {
+        "reply": reply,
+        "action": action,
+        "context_used": {
+            "surface": surface,
+            "saved_recommendations": saved_count,
+        },
+    }

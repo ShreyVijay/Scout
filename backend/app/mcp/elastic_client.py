@@ -1,10 +1,32 @@
 import os
 
-from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
 
 
 _elastic_client = None
+
+
+class ElasticConfigurationError(RuntimeError):
+    """Raised when Elasticsearch credentials are not available."""
+
+
+def is_elastic_configured():
+    return all(
+        os.getenv(name)
+        for name in (
+            "ELASTIC_CLOUD_ID",
+            "ELASTIC_USERNAME",
+            "ELASTIC_PASSWORD",
+        )
+    )
+
+
+def require_elastic_config():
+    if not is_elastic_configured():
+        raise ElasticConfigurationError(
+            "Elasticsearch integration is not configured. Set "
+            "ELASTIC_CLOUD_ID, ELASTIC_USERNAME, and ELASTIC_PASSWORD."
+        )
 
 
 def get_elastic_client():
@@ -15,7 +37,7 @@ def get_elastic_client():
     global _elastic_client
 
     if _elastic_client is None:
-        load_dotenv()
+        require_elastic_config()
         _elastic_client = Elasticsearch(
             cloud_id=os.getenv("ELASTIC_CLOUD_ID"),
             basic_auth=(

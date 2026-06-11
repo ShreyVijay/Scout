@@ -6,6 +6,7 @@ import MissionStateCard from '../components/MissionStateCard';
 import BudgetCard from '../components/BudgetCard';
 import MapView from '../components/map/MapView';
 import ItineraryMap from '../components/map/ItineraryMap';
+import { MissionBar, JourneyTimeline } from '../components/PitchUI';
 
 export default function MissionPage() {
   const { team } = useParams();
@@ -68,6 +69,7 @@ export default function MissionPage() {
 
   return (
     <div id="mission-page" className="page">
+      <MissionBar mode="monitoring" />
       <section className="page-header">
         <div>
           <p className="eyebrow">Mission control</p>
@@ -101,27 +103,7 @@ export default function MissionPage() {
         </section>
       )}
 
-      <section id="itinerary-section" className="card">
-        <div className="section-title">
-          <h3>Journey Timeline</h3>
-        </div>
-        {itinerary.length > 0 ? (
-          <div className="timeline">
-            {itinerary.map((item, index) => (
-              <article key={`${item.city}-${index}`} className="timeline-item">
-                <div className="timeline-node">{index + 1}</div>
-                <div>
-                  <strong>{item.city || '-'}</strong>
-                  <small>{item.stadium || 'Stadium TBD'}</small>
-                </div>
-                <span className="badge">{item.date || 'TBD'}</span>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="empty">No itinerary data.</p>
-        )}
-      </section>
+      <JourneyTimeline mode="monitoring" />
 
       <section id="state-history-section" className="card">
         <div className="section-title">

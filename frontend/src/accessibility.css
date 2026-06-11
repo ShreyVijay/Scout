@@ -1,0 +1,92 @@
+/* One-liner CSS Toggles */
+
+/* Bigger Text */
+html.a11y-bigger-text {
+  font-size: 120%;
+}
+
+/* Text Spacing */
+html.a11y-text-spacing * {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+  line-height: 1.7 !important;
+}
+
+/* Line Height */
+html.a11y-line-height * {
+  line-height: 2.0 !important;
+}
+
+/* Text Align */
+html.a11y-text-align p,
+html.a11y-text-align li,
+html.a11y-text-align span {
+  text-align: left !important;
+}
+
+/* Pause Animations */
+html.a11y-pause-animations *,
+html.a11y-pause-animations *::before,
+html.a11y-pause-animations *::after {
+  animation-play-state: paused !important;
+  transition-duration: 0ms !important;
+}
+
+/* Hide Images */
+html.a11y-hide-images img,
+html.a11y-hide-images [role="img"],
+html.a11y-hide-images svg:not([aria-label]) {
+  visibility: hidden !important;
+}
+
+/* Highlight Links */
+html.a11y-highlight-links a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+  font-weight: 600 !important;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Saturation Filters */
+html.a11y-sat-low body { filter: saturate(0.2) }
+html.a11y-sat-none body { filter: saturate(0) }
+html.a11y-sat-high body { filter: saturate(2.0) }
+
+
+/* Tier 2 Components */
+
+/* Contrast+ */
+html.a11y-contrast {
+  --color-t1: #ffffff;
+  --color-base: #000000;
+  --color-surface: #000000;
+  --color-card: #000000;
+  --color-border-custom: #ffffff;
+  --color-hairline: rgba(255, 255, 255, 0.4);
+  /* Make text stark white and bg pure black */
+}
+
+/* Cursor (The JS handles creating the custom div overlay) */
+html.a11y-cursor, html.a11y-cursor * { 
+  cursor: none !important; 
+}
+
+/* Dyslexia Friendly (The JS handles loading the font) */
+html.a11y-dyslexia body {
+  font-family: 'OpenDyslexic', sans-serif !important;
+}
+
+/* Page Structure */
+html.a11y-structure h1,
+html.a11y-structure h2,
+html.a11y-structure h3 {
+  outline: 2px solid #E85555 !important;
+}
+html.a11y-structure nav,
+html.a11y-structure main,
+html.a11y-structure footer,
+html.a11y-structure section {
+  outline: 2px solid #3DC99A !important;
+}

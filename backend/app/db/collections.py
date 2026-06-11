@@ -1,0 +1,2 @@
+USERS_COLLECTION = "users"
+SAVED_MISSIONS_COLLECTION = "saved_missions"

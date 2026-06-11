@@ -18,6 +18,7 @@ import RecommendationCard from '../components/RecommendationCard';
 import RankingTable from '../components/RankingTable';
 import ReasoningPanel from '../components/ReasoningPanel';
 import AuditPanel from '../components/AuditPanel';
+import { HeroReplanning } from '../components/PitchUI';
 
 function OptionsTable({ title, empty, items, priceLabel = 'Price' }) {
   return (
@@ -160,24 +161,11 @@ export default function ReplanningPage() {
         </RouterLink>
       </section>
 
-      <section className="pitch-card">
-        <div className="pitch-header">
-          <div>
-            <p className="eyebrow">Scenario engine</p>
-            <h2>Generate the next best route</h2>
-          </div>
-        </div>
-        <div className="pitch-body">
-          <button
-            id="btn-generate-recommendation"
-            className="btn"
-            onClick={handleReplan}
-            disabled={loading}
-          >
-            {loading ? 'Generating...' : 'Generate Recommendation'}
-          </button>
-        </div>
-      </section>
+      <HeroReplanning 
+        team={team} 
+        onReplan={handleReplan} 
+        loading={loading} 
+      />
 
       {error && <div className="error-banner">{error}</div>}
 

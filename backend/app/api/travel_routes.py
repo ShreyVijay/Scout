@@ -9,8 +9,8 @@ router = APIRouter(prefix="/travel", tags=["Travel Intelligence"])
 
 @router.get("/flights")
 def get_flights_endpoint(
-    origin: str = Query(default="Miami"),
-    destination: str = Query(default="Seattle"),
+    origin: str = Query(...),
+    destination: str = Query(...),
     departure_date: str = Query(default=None)
 ):
     try:
@@ -20,7 +20,7 @@ def get_flights_endpoint(
         return {"flights": [], "error": str(e)}
 
 @router.get("/hotels")
-def get_hotels_endpoint(city: str = Query(default="Miami")):
+def get_hotels_endpoint(city: str = Query(...)):
     try:
         results = search_hotels(city)
         return {"hotels": results}
@@ -29,8 +29,8 @@ def get_hotels_endpoint(city: str = Query(default="Miami")):
 
 @router.get("/buses")
 def get_buses_endpoint(
-    origin: str = Query(default="Miami"),
-    destination: str = Query(default="Orlando"),
+    origin: str = Query(...),
+    destination: str = Query(...),
     departure_date: str = Query(default=None)
 ):
     try:
@@ -40,7 +40,7 @@ def get_buses_endpoint(
         return {"buses": [], "error": str(e)}
 
 @router.get("/tickets")
-def get_tickets_endpoint(match: str = Query(default="World Cup Match")):
+def get_tickets_endpoint(match: str = Query(...)):
     try:
         results = search_tickets(match)
         return {"tickets": results}

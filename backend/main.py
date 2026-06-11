@@ -6,6 +6,9 @@ from fastapi.responses import JSONResponse
 from app.api.routes import router
 from app.api.travel_routes import router as travel_router
 from app.api.google_routes import router as google_router
+from app.api.health import router as health_router
+from app.api.auth import router as auth_router
+from app.api.saved_missions import router as saved_missions_router
 
 app = FastAPI(title="Scout")
 
@@ -26,6 +29,9 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(travel_router)
 app.include_router(google_router)
+app.include_router(health_router)
+app.include_router(auth_router)
+app.include_router(saved_missions_router)
 
 try:
     from scout_mcp.server import mcp
@@ -37,18 +43,14 @@ except ImportError:
 def root():
     return {"message": "Scout Backend Running"}
 
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-
 @app.get("/readiness")
 def readiness():
     required_variables = [
         "ELASTIC_CLOUD_ID",
         "ELASTIC_USERNAME",
         "ELASTIC_PASSWORD",
+        "MONGODB_URI",
+        "GOOGLE_MAPS_API_KEY"
     ]
     missing_variables = [name for name in required_variables if not os.getenv(name)]
 
@@ -88,27 +90,3 @@ def readiness():
         )
 
     return {"status": "ready"}
-
-
-@app.get("/health/mcp")
-def mcp_health():
-    from scout_mcp.metrics import get_tool_metrics
-    from scout_mcp.registry import list_tools
-    from scout_mcp.tools import (
-        budget_tools,
-        city_tools,
-        mission_tools,
-        preference_tools,
-        recommendation_tools,
-        stadium_tools,
-        tournament_tools,
-    )
-
-    return {
-        "healthy": True,
-        "tool_count": len(list_tools()),
-        "tools": list_tools(),
-        "metrics": get_tool_metrics(),
-        "version": "v1",
-        "sdk": "FastMCP"
-    }

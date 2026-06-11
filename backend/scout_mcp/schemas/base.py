@@ -38,7 +38,7 @@ def success_response(tool: str, data: Any, latency_ms: float) -> dict:
         success=True,
         data=data,
         metadata=ToolMetadata(tool=tool, latency_ms=latency_ms),
-    ).model_dump(mode="json")
+    ).model_dump(mode="json", exclude_none=True)
 
 
 def error_response(tool: str, error: Exception, latency_ms: float) -> dict:
@@ -46,4 +46,4 @@ def error_response(tool: str, error: Exception, latency_ms: float) -> dict:
         success=False,
         error=ToolError(type=type(error).__name__, message=str(error)),
         metadata=ToolMetadata(tool=tool, latency_ms=latency_ms),
-    ).model_dump(mode="json")
+    ).model_dump(mode="json", exclude_none=True)

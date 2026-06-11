@@ -1,9 +1,6 @@
 import os
-from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
 from datetime import datetime
-
-load_dotenv()
 
 es = Elasticsearch(
     cloud_id=os.getenv("ELASTIC_CLOUD_ID"),
@@ -13,70 +10,80 @@ es = Elasticsearch(
     )
 )
 
-def ensure_users_index():
+def ensure_preferences_index():
     try:
-        if not es.indices.exists(index="users"):
+        if not es.indices.exists(index="user_preferences"):
             es.indices.create(
-                index="users",
+                index="user_preferences",
                 mappings={
                     "properties": {
-                        "user_id": {"type": "keyword"},
                         "email": {"type": "keyword"},
-                        "name": {"type": "text"},
                         "preferences": {
                             "properties": {
                                 "atmosphere_weight": {"type": "float"},
                                 "budget_weight": {"type": "float"},
                                 "transport_weight": {"type": "float"}
                             }
-                        },
-                        "saved_missions": {"type": "keyword"},
-                        "created_at": {"type": "date"},
-                        "updated_at": {"type": "date"}
+                        }
                     }
                 }
             )
     except Exception:
-        pass  # Gracefully ignore if index already exists or creation fails due to network
+        pass
 
-def get_user(user_id: str) -> dict:
-    ensure_users_index()
-    try:
-        res = es.get(index="users", id=user_id)
-        user = res["_source"]
-        return user
-    except Exception:
-        if user_id == "default-fan":
-            # Initialize default user
-            default_user = {
-                "user_id": "default-fan",
-                "email": "fan@fifa2026.com",
-                "name": "Super Fan",
-                "preferences": {
-                    "atmosphere_weight": 0.5,
-                    "budget_weight": 0.3,
-                    "transport_weight": 0.2
-                },
-                "saved_missions": [],
-                "created_at": datetime.utcnow().isoformat(),
-                "updated_at": datetime.utcnow().isoformat()
-            }
-            save_user(default_user)
-            return default_user
+def get_user(email: str) -> dict:
+    from app.db.mongodb import get_database
+    from app.db.collections import USERS_COLLECTION, SAVED_MISSIONS_COLLECTION
+    db = get_database()
+    
+    # Fetch identity from MongoDB
+    user_doc = db[USERS_COLLECTION].find_one({"email": email}, {"_id": 0})
+    if not user_doc:
         return None
+        
+    user = dict(user_doc)
+    user["user_id"] = email  # Keep user_id for legacy compatibility
+    
+    # Fetch preferences from Elasticsearch
+    ensure_preferences_index()
+    try:
+        res = es.get(index="user_preferences", id=email)
+        user["preferences"] = res["_source"].get("preferences", {})
+    except Exception:
+        user["preferences"] = {
+            "atmosphere_weight": 0.5,
+            "budget_weight": 0.3,
+            "transport_weight": 0.2
+        }
+        
+    # Fetch saved missions from MongoDB
+    missions = list(db[SAVED_MISSIONS_COLLECTION].find({"email": email}, {"_id": 0}))
+    user["saved_missions"] = [m["mission_id"] for m in missions]
+    
+    return user
 
 def save_user(user: dict) -> dict:
-    ensure_users_index()
-    user["updated_at"] = datetime.utcnow().isoformat()
-    if "created_at" not in user or not user["created_at"]:
-        user["created_at"] = datetime.utcnow().isoformat()
+    from app.db.mongodb import get_database
+    from app.db.collections import USERS_COLLECTION
+    db = get_database()
     
-    # Exclude metadata from doc body
-    doc = {k: v for k, v in user.items() if k not in ["_elastic_id", "_seq_no", "_primary_term"]}
+    email = user["email"]
+    name = user.get("name", "User")
     
-    es.index(
-        index="users",
-        id=user["user_id"],
-        document=doc
+    # Save identity to MongoDB
+    db[USERS_COLLECTION].update_one(
+        {"email": email},
+        {"$set": {"email": email, "name": name}},
+        upsert=True
     )
+    
+    # Save preferences to Elasticsearch
+    if "preferences" in user:
+        ensure_preferences_index()
+        es.index(
+            index="user_preferences",
+            id=email,
+            document={"email": email, "preferences": user["preferences"]}
+        )
+        
     return user

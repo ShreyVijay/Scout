@@ -81,6 +81,11 @@ export async function getMissions() {
   return response.data;
 }
 
+export async function sendScoutChat(data) {
+  const response = await api.post('/chat', data);
+  return response.data;
+}
+
 // ── Travel Intelligence ────────────────────────────────────────
 
 export async function getTravelFlights(origin, destination, departureDate) {

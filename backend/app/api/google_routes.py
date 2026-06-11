@@ -1,20 +1,24 @@
+from typing import List
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
 
-from google.schemas.provider_dtos import VenueDTO, ExplanationDTO, RouteDTO
+from app.mcp.elastic_client import ElasticConfigurationError
+from google.schemas.provider_dtos import ExplanationDTO, VenueDTO
 from google.services.gemini_explanation_service import GeminiExplanationService
 from google.services.map_intelligence_service import MapIntelligenceService
 from google.services.travel_intelligence_service import TravelIntelligenceService
 from google.services.venue_intelligence_service import VenueIntelligenceService
+from google.settings import get_secret
 
 router = APIRouter(prefix="/google", tags=["google"])
 
-# Initialize services
-gemini_service = GeminiExplanationService()
-map_service = MapIntelligenceService()
-travel_service = TravelIntelligenceService()
-venue_service = VenueIntelligenceService()
+INTEGRATION_UNAVAILABLE = "Google/Elastic integration not configured"
+
+_gemini_service = None
+_map_service = None
+_travel_service = None
+_venue_service = None
 
 
 class ExplanationRequest(BaseModel):
@@ -28,9 +32,72 @@ class TravelPlanRequest(BaseModel):
     route_data: dict
 
 
+def integration_unavailable(exc: Exception):
+    raise HTTPException(
+        status_code=503,
+        detail=f"{INTEGRATION_UNAVAILABLE}: {exc}",
+    )
+
+
+def require_google_maps_config():
+    if not get_secret("GOOGLE_MAPS_API_KEY"):
+        integration_unavailable(ValueError("GOOGLE_MAPS_API_KEY not found"))
+
+
+def require_google_gemini_config():
+    if not get_secret("GOOGLE_GEMINI_API_KEY"):
+        integration_unavailable(ValueError("GOOGLE_GEMINI_API_KEY not found"))
+
+
+def get_gemini_service():
+    global _gemini_service
+    require_google_gemini_config()
+    if _gemini_service is None:
+        try:
+            _gemini_service = GeminiExplanationService()
+        except Exception as exc:
+            integration_unavailable(exc)
+    return _gemini_service
+
+
+def get_map_service():
+    global _map_service
+    require_google_maps_config()
+    if _map_service is None:
+        try:
+            _map_service = MapIntelligenceService()
+        except ElasticConfigurationError as exc:
+            integration_unavailable(exc)
+        except Exception as exc:
+            integration_unavailable(exc)
+    return _map_service
+
+
+def get_travel_service():
+    global _travel_service
+    require_google_maps_config()
+    if _travel_service is None:
+        try:
+            _travel_service = TravelIntelligenceService()
+        except Exception as exc:
+            integration_unavailable(exc)
+    return _travel_service
+
+
+def get_venue_service():
+    global _venue_service
+    require_google_maps_config()
+    if _venue_service is None:
+        try:
+            _venue_service = VenueIntelligenceService()
+        except Exception as exc:
+            integration_unavailable(exc)
+    return _venue_service
+
+
 @router.get("/city/{city}/map")
 def get_city_map(city: str):
-    loc = map_service.get_city_coordinates(city)
+    loc = get_map_service().get_city_coordinates(city)
     if not loc:
         raise HTTPException(status_code=404, detail="City coordinates not found")
     return loc
@@ -38,7 +105,7 @@ def get_city_map(city: str):
 
 @router.get("/stadium/{stadium}/map")
 def get_stadium_map(stadium: str):
-    loc = map_service.get_stadium_coordinates(stadium)
+    loc = get_map_service().get_stadium_coordinates(stadium)
     if not loc:
         raise HTTPException(status_code=404, detail="Stadium coordinates not found")
     return loc
@@ -46,49 +113,50 @@ def get_stadium_map(stadium: str):
 
 @router.get("/route")
 def get_route(origin_city: str, dest_city: str):
+    map_service = get_map_service()
     origin = map_service.get_city_coordinates(origin_city)
     dest = map_service.get_city_coordinates(dest_city)
     if not origin or not dest:
         raise HTTPException(status_code=404, detail="Coordinates not found for origin or destination")
-    return travel_service.calculate_travel_metrics(origin, dest)
+    return get_travel_service().calculate_travel_metrics(origin, dest)
 
 
 @router.get("/city/{city}/hotels", response_model=List[VenueDTO])
 def get_city_hotels(city: str, radius: int = 5000):
-    loc = map_service.get_city_coordinates(city)
+    loc = get_map_service().get_city_coordinates(city)
     if not loc:
         raise HTTPException(status_code=404, detail="City not found")
-    return venue_service.nearby_hotels(loc, radius)
+    return get_venue_service().nearby_hotels(loc, radius)
 
 
 @router.get("/city/{city}/restaurants", response_model=List[VenueDTO])
 def get_city_restaurants(city: str, radius: int = 5000):
-    loc = map_service.get_city_coordinates(city)
+    loc = get_map_service().get_city_coordinates(city)
     if not loc:
         raise HTTPException(status_code=404, detail="City not found")
-    return venue_service.nearby_restaurants(loc, radius)
+    return get_venue_service().nearby_restaurants(loc, radius)
 
 
 @router.get("/city/{city}/attractions", response_model=List[VenueDTO])
 def get_city_attractions(city: str, radius: int = 5000):
-    loc = map_service.get_city_coordinates(city)
+    loc = get_map_service().get_city_coordinates(city)
     if not loc:
         raise HTTPException(status_code=404, detail="City not found")
-    return venue_service.nearby_attractions(loc, radius)
+    return get_venue_service().nearby_attractions(loc, radius)
 
 
 @router.post("/explain", response_model=ExplanationDTO)
 def explain_recommendation(request: ExplanationRequest):
-    return gemini_service.get_recommendation_explanation(
+    return get_gemini_service().get_recommendation_explanation(
         request.recommendation,
         request.reasoning,
-        request.audit
+        request.audit,
     )
 
 
 @router.post("/travel-plan", response_model=ExplanationDTO)
 def travel_plan(request: TravelPlanRequest):
-    return gemini_service.get_travel_narrative(
+    return get_gemini_service().get_travel_narrative(
         request.route_data,
-        request.recommendation
+        request.recommendation,
     )
