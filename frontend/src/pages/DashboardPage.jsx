@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getMissions } from '../services/api';
+import WalletDrawer from '../components/WalletDrawer';
+import { useWallet } from '../store/useWallet';
+import { useSession } from '../store/useSession';
+import { t } from '../i18n';
 import { HeroLive, GoalOverlay } from '../components/PitchUI';
 
 const alerts = [
@@ -29,6 +33,9 @@ export default function DashboardPage() {
   const [savedRecs, setSavedRecs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [walletOpen, setWalletOpen] = useState(false);
+  const language = useSession((state) => state.language);
+  const balance = useWallet((state) => state.balance);
   const [goalVisible, setGoalVisible] = useState(false);
 
   useEffect(() => {
@@ -56,10 +63,8 @@ export default function DashboardPage() {
     loadDashboard();
   }, []);
 
-  const totalBudget = missions.reduce((sum, mission) => {
-    const value = mission.budget?.total_budget || mission.budget || 0;
-    return sum + Number(value || 0);
-  }, 0);
+  const activeMissionsCount = missions.length;
+  const savedRecsCount = savedRecs.length;
 
   function removeRecommendation(index) {
     const updated = savedRecs.filter((_, i) => i !== index);
@@ -69,32 +74,27 @@ export default function DashboardPage() {
 
   return (
     <div id="dashboard-page" className="page">
-      <section className="dashboard-hero">
-        <div>
-          <p className="eyebrow">Scout command center</p>
-          <h1>Plan every match-day move before the table changes.</h1>
-          <p>
-            Track missions, budget exposure, saved routes, and live travel signals
-            for FIFA 2026 trips.
-          </p>
-        </div>
-        <Link to="/new-mission" className="btn">Create Mission</Link>
+      <section className="hero-section">
+        <p className="eyebrow">{t('dashboard.hero_eyebrow', language)}</p>
+        <h1 className="hero-title">{t('dashboard.hero_title', language)}</h1>
       </section>
 
-      <section className="metric-grid" aria-label="Dashboard metrics">
-        <div className="metric-tile">
-          <span>Active missions</span>
-          <strong>{missions.length}</strong>
-        </div>
-        <div className="metric-tile">
-          <span>Budget tracked</span>
-          <strong>${totalBudget.toLocaleString()}</strong>
-        </div>
-        <div className="metric-tile">
-          <span>Saved recommendations</span>
-          <strong>{savedRecs.length}</strong>
-        </div>
+      <section className="stats-grid">
+        <article className="stat-card">
+          <p className="stat-label">{t('dashboard.active_missions', language)}</p>
+          <p className="stat-value">{activeMissionsCount}</p>
+        </article>
+        <article className="stat-card" onClick={() => setWalletOpen(true)} style={{ cursor: 'pointer' }}>
+          <p className="stat-label">{t('dashboard.budget_tracked', language)}</p>
+          <p className="stat-value">${balance.toLocaleString()}</p>
+        </article>
+        <article className="stat-card">
+          <p className="stat-label">{t('dashboard.saved_recs', language)}</p>
+          <p className="stat-value">{savedRecsCount}</p>
+        </article>
       </section>
+
+      <WalletDrawer open={walletOpen} onClose={() => setWalletOpen(false)} />
 
       <section style={{ marginBottom: '24px' }}>
         <HeroLive onGoal={() => setGoalVisible(true)} />

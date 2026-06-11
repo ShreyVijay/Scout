@@ -8,15 +8,23 @@ import StadiumsPage from '../pages/StadiumsPage';
 import DashboardPage from '../pages/DashboardPage';
 import ProfilePage from '../pages/ProfilePage';
 import MyMissionsPage from '../pages/MyMissionsPage';
+import OnboardingPage from '../pages/OnboardingPage';
 import PageTransition from '../components/PageTransition';
+import { useSession } from '../store/useSession';
 
 export default function AppRoutes() {
   const location = useLocation();
+  const hasOnboarded = useSession((state) => state.hasOnboarded);
+
+  if (!hasOnboarded && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/onboarding" element={<PageTransition><OnboardingPage /></PageTransition>} />
         <Route path="/dashboard" element={<PageTransition><DashboardPage /></PageTransition>} />
         <Route path="/new-mission" element={<PageTransition><HomePage /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />

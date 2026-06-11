@@ -1,151 +1,111 @@
-import { useState, useEffect } from 'react';
-import { getUserProfile, updateUserProfile } from '../services/api';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSession } from '../store/useSession';
+import { useWallet } from '../store/useWallet';
+import { t } from '../i18n';
+import LanguagePicker from '../components/LanguagePicker';
+import ThemeToggle from '../components/ThemeToggle';
+import WalletDrawer from '../components/WalletDrawer';
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const session = useSession();
+  const balance = useWallet((state) => state.balance);
+  const navigate = useNavigate();
+  const [walletOpen, setWalletOpen] = useState(false);
 
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const data = await getUserProfile();
-        setProfile(data);
-      } catch (err) {
-        setError(err.message || 'Failed to load user profile');
-      } finally {
-        setLoading(false);
-      }
+  const handleClearSession = () => {
+    if (window.confirm('Are you sure you want to clear your local session and restart onboarding?')) {
+      session.clearSession();
+      navigate('/onboarding', { replace: true });
     }
-    loadProfile();
-  }, []);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    setSuccess(false);
-
-    try {
-      const updated = await updateUserProfile(profile);
-      setProfile(updated);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setError(err.message || 'Failed to update user profile');
-    }
-  }
-
-  function handleWeightChange(field, val) {
-    const floatVal = parseFloat(val);
-    setProfile((prev) => ({
-      ...prev,
-      preferences: {
-        ...prev.preferences,
-        [field]: floatVal,
-      },
-    }));
-  }
-
-  if (loading) {
-    return (
-      <div id="profile-page" className="page">
-        <p className="loading">Loading user profile...</p>
-      </div>
-    );
-  }
+  };
 
   return (
     <div id="profile-page" className="page">
       <section className="page-header">
         <div>
-          <p className="eyebrow">Preference engine</p>
-          <h1>User Profile</h1>
+          <p className="eyebrow">{t('nav.profile', session.language) || 'Profile'}</p>
+          <h1>{session.name || 'Traveler'}</h1>
+          <p style={{ color: 'var(--c-t2)', marginTop: '4px' }}>{session.email}</p>
         </div>
       </section>
 
-      {error && <div className="error-banner">{error}</div>}
-      {success && <div className="success-banner">Profile saved successfully.</div>}
-
-      {profile && (
-        <form onSubmit={handleSubmit} className="card form-panel">
+      <div className="grid-2" style={{ gap: '24px' }}>
+        <section className="card">
           <div className="section-title">
-            <h3>Profile Details</h3>
+            <h3>App Settings</h3>
           </div>
-
-          <label htmlFor="user-name">Full Name</label>
-          <input
-            id="user-name"
-            type="text"
-            value={profile.name || ''}
-            onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-            required
-          />
-
-          <label htmlFor="user-email">Email Address</label>
-          <input
-            id="user-email"
-            type="text"
-            value={profile.email || ''}
-            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-            required
-          />
-
-          <div className="sub-section">
-            <h4>Decision Intelligence Weights</h4>
-            <p className="description">
-              Define the default scoring weights for itinerary recommendations.
-            </p>
-
-            <div className="range-row">
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <span>Atmosphere Weight</span>
-                <span>{profile.preferences?.atmosphere_weight?.toFixed(2)}</span>
+                <strong>Language</strong>
+                <p style={{ fontSize: '0.8rem', color: 'var(--c-t2)', margin: 0 }}>Select your preferred language</p>
               </div>
-              <input
-                type="range"
-                min="0.0"
-                max="1.0"
-                step="0.05"
-                value={profile.preferences?.atmosphere_weight ?? 0.5}
-                onChange={(e) => handleWeightChange('atmosphere_weight', e.target.value)}
-              />
+              <LanguagePicker />
             </div>
-
-            <div className="range-row">
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <span>Budget Weight</span>
-                <span>{profile.preferences?.budget_weight?.toFixed(2)}</span>
+                <strong>Theme</strong>
+                <p style={{ fontSize: '0.8rem', color: 'var(--c-t2)', margin: 0 }}>Toggle light/dark mode</p>
               </div>
-              <input
-                type="range"
-                min="0.0"
-                max="1.0"
-                step="0.05"
-                value={profile.preferences?.budget_weight ?? 0.3}
-                onChange={(e) => handleWeightChange('budget_weight', e.target.value)}
-              />
-            </div>
-
-            <div className="range-row">
-              <div>
-                <span>Transport Weight</span>
-                <span>{profile.preferences?.transport_weight?.toFixed(2)}</span>
-              </div>
-              <input
-                type="range"
-                min="0.0"
-                max="1.0"
-                step="0.05"
-                value={profile.preferences?.transport_weight ?? 0.2}
-                onChange={(e) => handleWeightChange('transport_weight', e.target.value)}
-              />
+              <ThemeToggle />
             </div>
           </div>
+        </section>
 
-          <button type="submit" className="btn">Save Profile</button>
-        </form>
-      )}
+        <section className="card">
+          <div className="section-title">
+            <h3>Financials</h3>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <strong>Wallet Balance</strong>
+              <p style={{ fontSize: '0.8rem', color: 'var(--c-t2)', margin: 0 }}>Current available funds</p>
+            </div>
+            <strong style={{ fontSize: '1.25rem', color: 'var(--c-amber)' }}>
+              ${balance.toLocaleString()}
+            </strong>
+          </div>
+          
+          <button className="btn" onClick={() => setWalletOpen(true)} style={{ width: '100%' }}>
+            Manage Wallet
+          </button>
+        </section>
+
+        <section className="card">
+          <div className="section-title">
+            <h3>Travel Preferences</h3>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--c-t2)' }}>Travel Style</div>
+              <strong style={{ textTransform: 'capitalize' }}>{session.travelStyle || 'Balanced'}</strong>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--c-t2)' }}>Default Budget Limit</div>
+              <strong>${session.budgetLimit || 5000}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="card" style={{ border: '1px solid var(--c-red)' }}>
+          <div className="section-title">
+            <h3 style={{ color: 'var(--c-red)' }}>Danger Zone</h3>
+          </div>
+          <p style={{ fontSize: '0.9rem', color: 'var(--c-t2)', marginBottom: '16px' }}>
+            Clear your local session data. This will not delete backend missions, but will reset your onboarding state.
+          </p>
+          <button className="btn" style={{ background: 'var(--c-red)', color: 'white' }} onClick={handleClearSession}>
+            Clear Session & Restart
+          </button>
+        </section>
+      </div>
+
+      <WalletDrawer open={walletOpen} onClose={() => setWalletOpen(false)} />
     </div>
   );
 }

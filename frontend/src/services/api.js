@@ -7,6 +7,18 @@ const api = axios.create({
   },
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Clear local storage session
+      localStorage.removeItem('scout_session_v1');
+      window.location.href = '/onboarding';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ── Mission ────────────────────────────────────────────────────
 
 export async function createMission(data) {

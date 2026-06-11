@@ -172,8 +172,8 @@ function GoalOverlay({ visible, scorer, onDismiss }) {
 
 // ─── MISSION BAR ──────────────────────────────────────────────────────────────
 
-function MissionBar({ mode }) {
-  const m = MODE[mode];
+function MissionBar({ mission, mode = 'monitoring' }) {
+  const m = MODE[mode] || MODE.monitoring;
   return (
     <div style={{
       height:56, background:C.surface,
@@ -192,10 +192,10 @@ function MissionBar({ mode }) {
         }}>⚽</div>
         <div>
           <div style={{ fontFamily:'Space Grotesk,sans-serif', fontSize:14, fontWeight:700, color:C.t1, letterSpacing:'-0.01em', lineHeight:1.2 }}>
-            🇧🇷 Brazil · WC 2026
+            {mission ? `${mission.team} · WC 2026` : 'Team · WC 2026'}
           </div>
-          <div style={{ fontFamily:'Inter,sans-serif', fontSize:11, color:C.t3, marginTop:1 }}>
-            Group Stage · Match 2 of 3
+          <div style={{ fontFamily:'Inter,sans-serif', fontSize:11, color:C.t3, marginTop:1, textTransform: 'capitalize' }}>
+            {mission ? (mission.tournament_state || 'group_stage').replace('_', ' ') : 'Group Stage'}
           </div>
         </div>
       </div>

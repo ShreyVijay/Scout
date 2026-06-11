@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Link, NavLink } from 'react-router-dom';
+import { BrowserRouter, Link, NavLink, useLocation } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 import ScoutChat from './components/ScoutChat';
 import { persistAccessibility, useAccessibility } from './store/useAccessibility';
+import { useSession } from './store/useSession';
+import ThemeToggle from './components/ThemeToggle';
+import ErrorBoundary from './components/ErrorBoundary';
+import { Toaster } from 'sonner';
+import { t } from './i18n';
 import './styles.css';
 
 const navItems = [
@@ -34,16 +39,23 @@ const saturationModes = [
   { className: 'a11y-sat-high', label: 'High' },
 ];
 
-export default function App() {
+function AppLayout() {
   const rawA11y = useAccessibility((state) => state.activeClasses);
   const activeA11y = Array.isArray(rawA11y) ? rawA11y : [];
   const saturation = useAccessibility((state) => state.saturation);
-  const toggleClass = useAccessibility((state) => state.toggleClass);
-  const setSaturation = useAccessibility((state) => state.setSaturation);
-  const resetAccessibility = useAccessibility((state) => state.reset);
-  const [a11yOpen, setA11yOpen] = useState(false);
+  const theme = useSession((state) => state.theme);
+  const language = useSession((state) => state.language);
+
   const [chatOpen, setChatOpen] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ x: -100, y: -100 });
+  const location = useLocation();
+
+  const isMapRoute = ['/mission/', '/replan/', '/cities'].some(r => location.pathname.startsWith(r));
+  const isOnboarding = location.pathname === '/onboarding';
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -73,77 +85,33 @@ export default function App() {
   }, [activeA11y]);
 
   return (
-    <BrowserRouter>
-      <nav id="main-nav">
-        <div className="nav-brand">
-          <Link to="/dashboard">Scout</Link>
-          <span>FIFA 2026 travel command</span>
-        </div>
-        <div className="nav-links">
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to}>
-              <span aria-hidden="true">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
-          <button type="button" className="nav-ai" onClick={() => setChatOpen(true)}>
-            Scout AI
-          </button>
-        </div>
-      </nav>
+    <>
+      <Toaster richColors position="top-right" />
+      {!isOnboarding && (
+        <nav id="main-nav">
+          <div className="nav-brand">
+            <Link to="/dashboard">Scout</Link>
+            {isMapRoute && <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--c-green)', marginLeft: 8 }} />}
+            <span>FIFA 2026 travel command</span>
+          </div>
+          <div className="nav-links">
+            {navItems.map((item) => (
+              <NavLink key={item.to} to={item.to}>
+                <span aria-hidden="true">{item.icon}</span>
+                {t(`nav.${item.label.toLowerCase()}`, language)}
+              </NavLink>
+            ))}
+            <ThemeToggle />
+            <button type="button" className="nav-ai" onClick={() => setChatOpen(true)}>
+              {t('nav.scout', language)}
+            </button>
+          </div>
+        </nav>
+      )}
 
       <main>
         <AppRoutes />
       </main>
-
-      <aside className={`accessibility-panel ${a11yOpen ? 'open' : ''}`} aria-label="Accessibility settings">
-        <button
-          type="button"
-          className="accessibility-trigger"
-          aria-expanded={a11yOpen}
-          onClick={() => setA11yOpen((open) => !open)}
-        >
-          Access
-        </button>
-
-        {a11yOpen && (
-          <div className="accessibility-drawer">
-            <div className="section-title">
-              <h2>Accessibility Tools</h2>
-              <button type="button" className="icon-btn" onClick={resetAccessibility}>
-                Reset
-              </button>
-            </div>
-            <div className="a11y-grid">
-              {accessibilityOptions.map((option) => (
-                <button
-                  key={option.className}
-                  type="button"
-                  className={activeA11y.includes(option.className) ? 'active' : ''}
-                  aria-pressed={activeA11y.includes(option.className)}
-                  onClick={() => toggleClass(option.className)}
-                >
-                  <span>{option.label}</span>
-                  <small>{option.group}</small>
-                </button>
-              ))}
-            </div>
-            <div className="saturation-control" aria-label="Saturation">
-              <span>Saturation</span>
-              {saturationModes.map((mode) => (
-                <button
-                  key={mode.label}
-                  type="button"
-                  className={saturation === mode.className ? 'active' : ''}
-                  onClick={() => setSaturation(mode.className)}
-                >
-                  {mode.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </aside>
 
       {activeA11y.includes('a11y-cursor') && (
         <div
@@ -152,30 +120,42 @@ export default function App() {
         />
       )}
 
-      <ScoutChat open={chatOpen} onClose={() => setChatOpen((open) => !open)} />
+      {!isOnboarding && <ScoutChat open={chatOpen} onClose={() => setChatOpen((open) => !open)} />}
 
-      <nav id="bottom-nav" aria-label="Primary">
-        <NavLink to="/dashboard">
-          <span aria-hidden="true">D</span>
-          Home
-        </NavLink>
-        <NavLink to="/my-missions">
-          <span aria-hidden="true">M</span>
-          Missions
-        </NavLink>
-        <button type="button" className="bottom-ai" onClick={() => setChatOpen(true)}>
-          <span>AI</span>
-          Scout AI
-        </button>
-        <NavLink to="/cities">
-          <span aria-hidden="true">C</span>
-          Cities
-        </NavLink>
-        <NavLink to="/profile">
-          <span aria-hidden="true">P</span>
-          Me
-        </NavLink>
-      </nav>
-    </BrowserRouter>
+      {!isOnboarding && (
+        <nav id="bottom-nav" aria-label="Primary">
+          <NavLink to="/dashboard">
+            <span aria-hidden="true">D</span>
+            {t('nav.dashboard', language)}
+          </NavLink>
+          <NavLink to="/my-missions">
+            <span aria-hidden="true">M</span>
+            {t('nav.missions', language)}
+          </NavLink>
+          <button type="button" className="bottom-ai" onClick={() => setChatOpen(true)}>
+            <span>⚡</span>
+            {t('nav.scout', language)}
+          </button>
+          <NavLink to="/cities">
+            <span aria-hidden="true">C</span>
+            {t('nav.cities', language)}
+          </NavLink>
+          <NavLink to="/profile">
+            <span aria-hidden="true">P</span>
+            {t('nav.profile', language)}
+          </NavLink>
+        </nav>
+      )}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppLayout />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

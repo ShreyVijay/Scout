@@ -1,5 +1,81 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getStadiums } from '../services/api';
+import { getStadiumPhoto } from '../services/placesService';
+import { MapPin, Users } from '@phosphor-icons/react';
+
+function StadiumCard({ stadium }) {
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadPhoto() {
+      if (stadium.stadium) {
+        const url = await getStadiumPhoto(stadium.stadium);
+        if (mounted && url) {
+          setPhotoUrl(url);
+        }
+      }
+      if (mounted) setLoading(false);
+    }
+    loadPhoto();
+    return () => { mounted = false; };
+  }, [stadium.stadium]);
+
+  return (
+    <motion.article 
+      layout
+      onClick={() => setExpanded(!expanded)}
+      className="venue-card" 
+      style={{ cursor: 'pointer', overflow: 'hidden', padding: 0, display: 'flex', flexDirection: 'column' }}
+    >
+      <div style={{ height: '160px', width: '100%', position: 'relative' }}>
+        {loading ? (
+          <div className="skeleton" style={{ width: '100%', height: '100%', borderRadius: '0' }} />
+        ) : photoUrl ? (
+          <img 
+            src={photoUrl} 
+            alt={stadium.stadium} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: 'var(--c-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'var(--c-t2)' }}>No image</span>
+          </div>
+        )}
+        <div style={{ 
+          position: 'absolute', 
+          bottom: 0, left: 0, right: 0, 
+          padding: '12px', 
+          background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' 
+        }}>
+          <h3 style={{ margin: 0, color: 'white' }}>{stadium.stadium}</h3>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: '#ccc', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <MapPin size={14} /> {stadium.city || 'Host city'}
+          </p>
+        </div>
+      </div>
+      
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            style={{ overflow: 'hidden', padding: '16px', background: 'var(--c-surface)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--c-t2)', marginBottom: '8px' }}>
+              <Users size={16} /> Capacity: <strong style={{ color: 'var(--c-t1)' }}>{stadium.capacity ? stadium.capacity.toLocaleString() : '-'}</strong>
+            </div>
+            {/* Can add more stadium details here later */}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.article>
+  );
+}
 
 export default function StadiumsPage() {
   const [stadiums, setStadiums] = useState([]);
@@ -32,7 +108,9 @@ export default function StadiumsPage() {
     return (
       <div id="stadiums-page" className="page">
         <h1>Stadiums</h1>
-        <p className="loading">Loading stadiums...</p>
+        <section className="venue-grid stagger">
+          {[1,2,3,4,5,6].map(i => <div key={i} className="skeleton" style={{ height: '240px' }} />)}
+        </section>
       </div>
     );
   }
@@ -59,22 +137,9 @@ export default function StadiumsPage() {
       {stadiums.length === 0 ? (
         <p className="empty">No stadiums found.</p>
       ) : (
-        <section className="venue-grid">
+        <section className="venue-grid stagger">
           {stadiums.map((stadium, index) => (
-            <article key={`${stadium.stadium}-${index}`} className="pitch-card">
-              <div className="pitch-header">
-                <div className="team-mark">
-                  <span aria-hidden="true">26</span>
-                  <strong>{stadium.city || 'Host city'}</strong>
-                </div>
-              </div>
-              <div className="pitch-body">
-                <strong>{stadium.stadium || '-'}</strong>
-                <p className="description">
-                  Capacity {stadium.capacity ? stadium.capacity.toLocaleString() : '-'}
-                </p>
-              </div>
-            </article>
+            <StadiumCard key={`${stadium.stadium}-${index}`} stadium={stadium} />
           ))}
         </section>
       )}

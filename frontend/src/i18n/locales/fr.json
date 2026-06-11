@@ -1,0 +1,38 @@
+﻿{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "missions": "Missions",
+    "cities": "Villes",
+    "stadiums": "Stades",
+    "profile": "Profil",
+    "scout": "Scout"
+  },
+  "dashboard": {
+    "hero_eyebrow": "Centre de commande Scout",
+    "hero_title": "Planifiez chaque mouvement le jour du match.",
+    "active_missions": "Missions actives",
+    "budget_tracked": "Budget suivi",
+    "saved_recs": "Recommandations sauvegardées"
+  },
+  "onboarding": {
+    "step1_title": "Qui suivez-vous ?",
+    "name_label": "Votre nom",
+    "email_label": "Adresse e-mail"
+  },
+  "chat": {
+    "greeting": "Bonjour {name}, je peux vous aider avec les itinéraires, les risques budgétaires et la replanification.",
+    "placeholder": "Posez des questions sur les itinéraires, les villes, le budget..."
+  },
+  "wallet": {
+    "title": "Portefeuille Scout",
+    "balance": "Solde",
+    "add_funds": "Ajouter des fonds",
+    "upi_id": "ID UPI",
+    "pay": "Payer"
+  },
+  "errors": {
+    "session_expired": "Session expirée",
+    "server_error": "Erreur serveur, réessayez",
+    "offline": "Vous semblez être hors ligne"
+  }
+}

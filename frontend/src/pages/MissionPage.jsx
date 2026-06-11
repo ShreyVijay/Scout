@@ -68,67 +68,73 @@ export default function MissionPage() {
   const history = mission.state_history || [];
 
   return (
-    <div id="mission-page" className="page">
-      <MissionBar mode="monitoring" />
-      <section className="page-header">
-        <div>
-          <p className="eyebrow">Mission control</p>
-          <h1>{mission.team}</h1>
-        </div>
-        <Link
-          to={`/replan/${encodeURIComponent(mission.team)}`}
-          className="btn"
-          id="link-replanning"
-        >
-          Review Route
-        </Link>
-      </section>
+    <div id="mission-page" className="map-layout">
+      <MissionBar mission={mission} mode="monitoring" />
+      
+      <div className="map-grid">
+        <div className="map-sidebar">
+          <section className="page-header" style={{ marginTop: 0 }}>
+            <div>
+              <p className="eyebrow">Mission control</p>
+              <h1>{mission.team}</h1>
+            </div>
+            <Link
+              to={`/replan/${encodeURIComponent(mission.team)}`}
+              className="btn"
+              id="link-replanning"
+            >
+              Review Route
+            </Link>
+          </section>
 
-      <div className="grid-2">
-        <MissionCard mission={mission} />
-        <MissionStateCard mission={mission} />
+          <div className="grid-2">
+            <MissionCard mission={mission} />
+            <MissionStateCard mission={mission} />
+          </div>
+
+          <BudgetCard mission={mission} />
+
+          {itinerary.length > 0 && (
+            <section className="card" id="mission-itinerary-map">
+              <div className="section-title">
+                <h3>Itinerary Details</h3>
+                <span className="badge">{itinerary.length} stops</span>
+              </div>
+              <JourneyTimeline itinerary={itinerary} />
+            </section>
+          )}
+
+          {history.length > 0 && (
+            <section className="card">
+              <div className="section-title">
+                <h3>Mission Logs</h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {history.map((evt, idx) => (
+                  <div key={idx} style={{ 
+                    padding: '0.75rem', 
+                    background: 'var(--c-surface)', 
+                    borderRadius: '8px',
+                    borderLeft: '2px solid var(--c-amber)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <strong style={{ fontSize: '0.85rem' }}>{evt.state.toUpperCase()}</strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--c-t3)' }}>
+                        {new Date(evt.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {evt.reason && <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--c-t2)' }}>{evt.reason}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <div className="map-pane">
+          <ItineraryMap itinerary={itinerary} height="100%" />
+        </div>
       </div>
-
-      <BudgetCard mission={mission} />
-
-      {itinerary.length > 0 && (
-        <section className="card" id="mission-itinerary-map">
-          <div className="section-title">
-            <h3>Itinerary Map</h3>
-            <span className="badge">{itinerary.length} stops</span>
-          </div>
-          <MapView centerCity={itinerary[0]?.city} height="320px">
-            <ItineraryMap stops={itinerary} />
-          </MapView>
-        </section>
-      )}
-
-      <JourneyTimeline mode="monitoring" />
-
-      <section id="state-history-section" className="card">
-        <div className="section-title">
-          <h3>State History</h3>
-          <span className="badge">{history.length} events</span>
-        </div>
-        {history.length > 0 ? (
-          <div className="timeline">
-            {history.map((entry, index) => (
-              <article key={index} className="timeline-item">
-                <div className="timeline-node">{index + 1}</div>
-                <div>
-                  <strong>{entry.event_type || entry.type || 'State change'}</strong>
-                  <small>
-                    {entry.from_stage || entry.from || '-'} to {entry.to_stage || entry.to || '-'}
-                  </small>
-                </div>
-                <span className="badge">{entry.event_time || entry.timestamp || 'TBD'}</span>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="empty">No state transitions recorded.</p>
-        )}
-      </section>
     </div>
   );
 }

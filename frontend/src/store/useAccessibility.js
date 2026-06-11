@@ -1,31 +1,25 @@
-import { create } from 'zustand';
+import { useSession } from './useSession';
 
-const STORAGE_KEY = 'scout_accessibility';
-const SATURATION_KEY = 'scout_saturation';
+export const useAccessibility = (selector) => {
+  const accessibility = useSession((state) => state.accessibility);
+  const setAccessibility = useSession((state) => state.setAccessibility);
 
-function readClasses() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
+  const api = {
+    activeClasses: accessibility.activeClasses || [],
+    saturation: accessibility.saturation || '',
+    toggleClass: (className) =>
+      setAccessibility((a11y) => ({
+        activeClasses: a11y.activeClasses.includes(className)
+          ? a11y.activeClasses.filter((item) => item !== className)
+          : [...a11y.activeClasses, className],
+      })),
+    setSaturation: (className) => setAccessibility({ saturation: className }),
+    reset: () => setAccessibility({ activeClasses: [], saturation: '' }),
+  };
 
-export const useAccessibility = create((set) => ({
-  activeClasses: readClasses(),
-  saturation: localStorage.getItem(SATURATION_KEY) || '',
-  toggleClass: (className) =>
-    set((state) => ({
-      activeClasses: state.activeClasses.includes(className)
-        ? state.activeClasses.filter((item) => item !== className)
-        : [...state.activeClasses, className],
-    })),
-  setSaturation: (className) => set({ saturation: className }),
-  reset: () => set({ activeClasses: [], saturation: '' }),
-}));
+  return selector(api);
+};
 
-export function persistAccessibility(activeClasses, saturation) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(activeClasses));
-  localStorage.setItem(SATURATION_KEY, saturation);
+export function persistAccessibility() {
+  // Now handled by zustand/middleware persist in useSession
 }

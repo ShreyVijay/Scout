@@ -1,19 +1,25 @@
 import { useState } from 'react';
-import { sendScoutChat } from '../services/api';
-
-const starterPrompts = [
-  'What should I watch before my next match?',
-  'Find the safest replanning move.',
-  'Explain my budget risk.',
-];
-
 import { Drawer } from 'vaul';
+import { sendScoutChat } from '../services/api';
+import { useSession } from '../store/useSession';
+import { t } from '../i18n';
 
 export default function ScoutChat({ open, onClose }) {
+  const language = useSession((state) => state.language);
+  const name = useSession((state) => state.name);
+
+  const starterPrompts = [
+    t('chat.prompt_watch', language) || 'What should I watch before my next match?',
+    t('chat.prompt_safe', language) || 'Find the safest replanning move.',
+    t('chat.prompt_risk', language) || 'Explain my budget risk.',
+  ];
+
+  const greeting = t('chat.greeting', language).replace('{name}', name || 'Traveler');
+
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: 'I can help with mission state, routes, budget risk, and replanning decisions.',
+      text: greeting,
     },
   ]);
   const [input, setInput] = useState('');
@@ -34,6 +40,8 @@ export default function ScoutChat({ open, onClose }) {
         context: {
           surface: window.location.pathname,
           saved_recommendations: JSON.parse(localStorage.getItem('saved_recommendations') || '[]'),
+          language: language,
+          user_name: name,
         },
       });
       setMessages([
@@ -71,7 +79,7 @@ export default function ScoutChat({ open, onClose }) {
             <div className="chat-handle mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
             <div className="section-title">
               <div>
-                <p className="eyebrow">Scout AI</p>
+                <p className="eyebrow">{t('nav.scout', language)}</p>
                 <h2>Travel command assistant</h2>
               </div>
               <button type="button" className="icon-btn" aria-label="Close Scout AI" onClick={onClose}>
@@ -105,11 +113,12 @@ export default function ScoutChat({ open, onClose }) {
             >
               <input
                 type="text"
+                placeholder={t('chat.placeholder', language)}
                 value={input}
-                placeholder="Ask about routes, budget, cities..."
-                onChange={(event) => setInput(event.target.value)}
+                onChange={(e) => setInput(e.target.value)}
+                disabled={loading}
               />
-              <button type="submit" className="btn btn-small" disabled={loading}>
+              <button type="submit" disabled={!input.trim() || loading}>
                 Send
               </button>
             </form>

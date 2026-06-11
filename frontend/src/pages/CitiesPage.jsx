@@ -1,18 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getCities } from '../services/api';
-
-function ScoreLine({ label, value }) {
-  const score = typeof value === 'number' ? value : 0;
-  return (
-    <div className="score-line">
-      <span>{label}</span>
-      <div className="score-bar" style={{ '--score': `${Math.min(score * 10, 100)}%` }}>
-        <i />
-      </div>
-      <span className="mono">{value ?? '-'}</span>
-    </div>
-  );
-}
+import CityCard from '../components/CityCard';
 
 export default function CitiesPage() {
   const [cities, setCities] = useState([]);
@@ -45,7 +33,9 @@ export default function CitiesPage() {
     return (
       <div id="cities-page" className="page">
         <h1>City Intelligence</h1>
-        <p className="loading">Loading cities...</p>
+        <section className="venue-grid stagger">
+          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: '360px' }} />)}
+        </section>
       </div>
     );
   }
@@ -72,16 +62,9 @@ export default function CitiesPage() {
       {cities.length === 0 ? (
         <p className="empty">No cities found.</p>
       ) : (
-        <section className="venue-grid">
+        <section className="venue-grid stagger">
           {cities.map((city, index) => (
-            <article key={`${city.city}-${index}`} className="venue-card">
-              <strong>{city.city || '-'}</strong>
-              <span>{city.country || 'Host market'}</span>
-              <ScoreLine label="Atmosphere" value={city.atmosphere_score} />
-              <ScoreLine label="Budget" value={city.budget_score} />
-              <ScoreLine label="Transport" value={city.transport_score} />
-              <ScoreLine label="Fan zone" value={city.fan_zone_score} />
-            </article>
+            <CityCard key={`${city.city}-${index}`} city={city} />
           ))}
         </section>
       )}
