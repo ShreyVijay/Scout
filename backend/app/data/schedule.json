@@ -1,0 +1,61 @@
+{
+  "tournament": "FIFA World Cup 2026",
+  "format": {
+    "teams": 48,
+    "matches": 104,
+    "groups": 12,
+    "knockout_starts": "Round of 32"
+  },
+  "matches": [
+    {
+      "match_id": 1,
+      "date": "2026-06-11",
+      "stage": "Group Stage",
+      "group": "A",
+      "team_home": "Mexico",
+      "team_away": "TBD",
+      "city": "Mexico City",
+      "stadium": "Estadio Azteca"
+    },
+    {
+      "match_id": 2,
+      "date": "2026-06-12",
+      "stage": "Group Stage",
+      "group": "B",
+      "team_home": "Canada",
+      "team_away": "TBD",
+      "city": "Toronto",
+      "stadium": "BMO Field"
+    },
+    {
+      "match_id": 3,
+      "date": "2026-06-12",
+      "stage": "Group Stage",
+      "group": "C",
+      "team_home": "USA",
+      "team_away": "TBD",
+      "city": "Los Angeles",
+      "stadium": "SoFi Stadium"
+    },
+    {
+      "match_id": 73,
+      "date": "2026-06-28",
+      "stage": "Round of 32",
+      "group": null,
+      "team_home": "1A",
+      "team_away": "3C/D/E",
+      "city": "Los Angeles",
+      "stadium": "SoFi Stadium"
+    },
+    {
+      "match_id": 104,
+      "date": "2026-07-19",
+      "stage": "Final",
+      "group": null,
+      "team_home": "W103",
+      "team_away": "W104",
+      "city": "New York/New Jersey",
+      "stadium": "MetLife Stadium"
+    }
+  ]
+}

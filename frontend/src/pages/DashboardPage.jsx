@@ -6,6 +6,18 @@ import { useWallet } from '../store/useWallet';
 import { useSession } from '../store/useSession';
 import { t } from '../i18n';
 import { HeroLive, GoalOverlay } from '../components/PitchUI';
+import MapView from '../components/map/MapView';
+import ItineraryMap from '../components/map/ItineraryMap';
+
+const getCountryCode = (team) => {
+  const map = {
+    'Argentina': 'ar', 'Brazil': 'br', 'USA': 'us', 'Mexico': 'mx', 'Canada': 'ca',
+    'England': 'gb-eng', 'France': 'fr', 'Germany': 'de', 'Spain': 'es', 'Portugal': 'pt',
+    'Japan': 'jp', 'South Korea': 'kr', 'Egypt': 'eg', 'Morocco': 'ma', 'Senegal': 'sn',
+    'Colombia': 'co', 'Uruguay': 'uy', 'Croatia': 'hr', 'Netherlands': 'nl', 'Belgium': 'be'
+  };
+  return map[team] || 'un';
+};
 
 const alerts = [
   {
@@ -30,6 +42,7 @@ const alerts = [
 
 export default function DashboardPage() {
   const [missions, setMissions] = useState([]);
+  const [currentMissionId, setCurrentMissionId] = useState(null);
   const [savedRecs, setSavedRecs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,8 +57,10 @@ export default function DashboardPage() {
       setError(null);
 
       try {
-        const data = await getMissions();
+        const email = useSession.getState().email;
+        const data = await getMissions(email);
         setMissions(data.missions || []);
+        setCurrentMissionId(data.current_mission_id || null);
       } catch (err) {
         setError(err.message || 'Failed to fetch missions');
       } finally {
@@ -101,24 +116,73 @@ export default function DashboardPage() {
       </section>
 
       <div className="grid-2">
-        <section className="card">
+        <section className="card" style={{ gridColumn: '1 / -1' }}>
           <div className="section-title">
-            <h2>Recent Missions</h2>
-            {missions.length > 5 && <Link to="/my-missions">See all</Link>}
+            <h2>Current Mission</h2>
           </div>
 
           {loading ? (
-            <p className="loading">Loading missions...</p>
+            <p className="loading">Loading mission...</p>
           ) : error ? (
             <div className="error-banner">{error}</div>
           ) : missions.length === 0 ? (
             <div>
-              <p className="empty">No missions created yet.</p>
+              <p className="empty">No active mission. Start planning your World Cup journey.</p>
               <Link to="/new-mission" className="btn btn-secondary">Create Mission</Link>
             </div>
           ) : (
+            <div className="mission-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {(() => {
+                const currentMission = missions.find(m => m.mission_id === currentMissionId) || missions[0];
+                if (!currentMission) return null;
+                return (
+                  <div key={`current-${currentMission.mission_id}`} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <Link
+                      className="mission-row"
+                      to={`/mission/${encodeURIComponent(currentMission.team)}`}
+                      style={{ background: 'var(--c-surface)', padding: '24px', border: '1px solid var(--c-border)', borderRadius: '12px' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ fontSize: '3rem' }}>
+                          <img 
+                            src={`https://flagcdn.com/w80/${getCountryCode(currentMission.team)}.png`} 
+                            alt={`${currentMission.team} flag`} 
+                            style={{ width: '60px', borderRadius: '4px', border: '1px solid #ccc' }}
+                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://flagcdn.com/w80/un.png'; }}
+                          />
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: '1.25rem', color: 'var(--c-t1)' }}>{currentMission.team}</strong>
+                          <div style={{ color: 'var(--c-t2)', marginTop: '4px' }}>{currentMission.objective || 'Follow the tournament path'}</div>
+                        </div>
+                      </div>
+                      <span className="mission-meta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                        <span className="badge" style={{ backgroundColor: 'var(--c-amber)', color: '#000' }}>Active Route</span>
+                        <strong style={{ fontSize: '1.25rem' }}>${Number(currentMission.budget?.total_budget || currentMission.budget || 0).toLocaleString()}</strong>
+                      </span>
+                    </Link>
+                    
+                    {currentMission.itinerary && currentMission.itinerary.length > 0 && (
+                      <div style={{ height: '300px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--c-border)' }}>
+                        <MapView centerCity={currentMission.itinerary[0]?.city || 'Miami'} height="100%">
+                          <ItineraryMap stops={currentMission.itinerary} team={currentMission.team} />
+                        </MapView>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </section>
+
+        {missions.length > 1 && (
+          <section className="card" style={{ gridColumn: '1 / -1' }}>
+            <div className="section-title">
+              <h2>Mission History</h2>
+            </div>
             <div className="mission-list">
-              {missions.slice(-5).reverse().map((mission, index) => (
+              {missions.filter(m => m.mission_id !== currentMissionId).map((mission, index) => (
                 <Link
                   key={`${mission.team}-${index}`}
                   className="mission-row"
@@ -126,17 +190,16 @@ export default function DashboardPage() {
                 >
                   <span>
                     <strong>{mission.team}</strong>
-                    <small>{mission.objective || 'Follow the tournament path'}</small>
+                    <small>{mission.objective || 'History'}</small>
                   </span>
                   <span className="mission-meta">
                     <span className="badge">{mission.travel_style}</span>
-                    <strong>${Number(mission.budget?.total_budget || mission.budget || 0).toLocaleString()}</strong>
                   </span>
                 </Link>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
         <section className="card">
           <div className="section-title">

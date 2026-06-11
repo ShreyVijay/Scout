@@ -84,6 +84,33 @@ function AppLayout() {
     return () => window.removeEventListener('mousemove', handleMove);
   }, [activeA11y]);
 
+  useEffect(() => {
+    if (isOnboarding) return;
+    
+    import('sonner').then(({ toast }) => {
+      const messages = [
+        "Checking flight prices for Dallas...",
+        "Monitoring hotel availability in Los Angeles...",
+        "Analyzing Group Stage ticket drops...",
+        "Scanning route optimizations for Mexico City...",
+        "Updating local weather forecasts for Seattle...",
+        "Recalculating budget risk based on current spending...",
+        "Syncing tournament schedule updates..."
+      ];
+      
+      const interval = setInterval(() => {
+        const msg = messages[Math.floor(Math.random() * messages.length)];
+        toast(msg, {
+          description: "Scout AI is running in the background",
+          duration: 4000,
+          position: "bottom-left"
+        });
+      }, 10000);
+      
+      return () => clearInterval(interval);
+    });
+  }, [isOnboarding]);
+
   return (
     <>
       <Toaster richColors position="top-right" />

@@ -88,8 +88,8 @@ export async function updateUserProfile(data) {
   return response.data;
 }
 
-export async function getMissions() {
-  const response = await api.get('/missions');
+export async function getMissions(email) {
+  const response = await api.get('/missions', { params: { email } });
   return response.data;
 }
 

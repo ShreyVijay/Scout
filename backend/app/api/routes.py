@@ -11,6 +11,7 @@ class MissionCreateRequest(BaseModel):
     budget: int
     travel_style: str
     objective: str
+    email: str = None
 
 
 class ChatRequest(BaseModel):
@@ -37,6 +38,19 @@ def create_mission_endpoint(request: MissionCreateRequest):
             k: v for k, v in mission.items()
             if k not in ["_elastic_id", "_seq_no", "_primary_term"]
         }
+
+        # Associate with user if email is provided
+        if request.email:
+            from app.services.user_store import get_user, save_user
+            user = get_user(request.email)
+            if user:
+                if user.get("current_mission"):
+                    history = user.get("mission_history", [])
+                    if user["current_mission"] not in history:
+                        history.append(user["current_mission"])
+                    user["mission_history"] = history
+                user["current_mission"] = result["mission_id"]
+                save_user(user)
 
         return result
 
@@ -243,24 +257,47 @@ def update_user_endpoint(request: UserUpdateRequest):
 # ── GET /missions ──────────────────────────────────────────────
 
 @router.get("/missions")
-def get_all_missions_endpoint():
+def get_all_missions_endpoint(email: str = None):
     try:
-        from app.services.user_store import es
+        from app.services.user_store import get_user, es
         if not es.indices.exists(index="missions"):
             return {"missions": []}
+            
+        if not email:
+            return {"missions": []}
+            
+        user = get_user(email)
+        if not user:
+            return {"missions": []}
+            
+        current_id = user.get("current_mission")
+        history_ids = user.get("mission_history", [])
+        
+        all_ids = []
+        if current_id:
+            all_ids.append(current_id)
+        all_ids.extend(history_ids)
+        
+        if not all_ids:
+            return {"missions": []}
+            
+        # Fetch those specific missions
         result = es.search(
             index="missions",
-            query={"match_all": {}},
+            query={"terms": {"mission_id.keyword": all_ids}},
             size=100
         )
+        
         missions = []
         for hit in result["hits"]["hits"]:
             src = hit["_source"]
             src["_elastic_id"] = hit["_id"]
-            # remove private keys
             src = {k: v for k, v in src.items() if k not in ["_elastic_id", "_seq_no", "_primary_term"]}
+            
+            # Sort them on the frontend or backend. For now, just return as missions.
             missions.append(src)
-        return {"missions": missions}
+            
+        return {"missions": missions, "current_mission_id": current_id}
     except Exception as e:
         return {"missions": []}
 
@@ -275,31 +312,36 @@ def chat_endpoint(request: ChatRequest):
     surface = request.context.get("surface", "Scout")
     saved_count = len(request.context.get("saved_recommendations", []))
 
+    import google.generativeai as genai
+    import os
+    
+    # Check if Gemini API key exists
+    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if not gemini_key:
+        return {"reply": "Gemini API key is not configured.", "action": "explain_context", "context_used": {}}
+        
+    genai.configure(api_key=gemini_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    system_prompt = f"""You are Scout, an intelligent travel agent for the FIFA 2026 World Cup.
+The 2026 World Cup features 48 teams, 104 matches, and a new Round of 32 format where top 2 + 8 best third-place teams advance.
+Current surface: {surface}
+Saved recommendations: {saved_count}
+Answer briefly and proactively help them plan their World Cup travel. Recommending actions like 'open_replanning' or 'review_budget' is highly encouraged if relevant."""
+
+    try:
+        response = model.generate_content(system_prompt + "\n\nUser: " + message)
+        reply = response.text
+    except Exception as e:
+        reply = f"Sorry, I encountered an error: {str(e)}"
+        
+    action = "explain_context"
     if "replan" in lower_message or "route" in lower_message:
-        reply = (
-            "Open the replanning flow for the active team, generate a recommendation, "
-            "then compare the top ranked city against your budget and transport scores."
-        )
         action = "open_replanning"
     elif "budget" in lower_message or "cost" in lower_message:
-        reply = (
-            "Check Budget Intelligence first: total budget, spent amount, projected "
-            "remaining budget, and risk badge. If the badge is medium or higher, re-run "
-            "the route before booking."
-        )
         action = "review_budget"
     elif "city" in lower_message or "stadium" in lower_message:
-        reply = (
-            "Use City Intelligence for atmosphere, budget, transport, and fan-zone scores. "
-            "Use Stadiums when venue capacity and host city context matter more than price."
-        )
         action = "open_city_intelligence"
-    else:
-        reply = (
-            "I can help you decide whether to monitor, replan, or save a recommendation. "
-            f"You are currently on {surface}, with {saved_count} saved recommendations."
-        )
-        action = "explain_context"
 
     return {
         "reply": reply,

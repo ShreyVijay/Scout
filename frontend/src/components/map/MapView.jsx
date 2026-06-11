@@ -194,6 +194,7 @@ export default function MapView({ children, centerCity = "Miami", height = "400p
 
               {/* Active Route/Itinerary Connections */}
               {activePaths.map((path) => {
+                if (!path.stops) return null;
                 const coordinates = path.stops.map(stopName => HOST_CITIES_COORDS[stopName]).filter(Boolean);
                 if (coordinates.length < 2) return null;
                 
@@ -254,6 +255,28 @@ export default function MapView({ children, centerCity = "Miami", height = "400p
                 symbol = '⭐';
               }
 
+              const getCode = (t) => {
+                const m = {
+                  'Argentina': 'ar', 'Brazil': 'br', 'USA': 'us', 'Mexico': 'mx', 'Canada': 'ca',
+                  'England': 'gb-eng', 'France': 'fr', 'Germany': 'de', 'Spain': 'es', 'Portugal': 'pt',
+                  'Japan': 'jp', 'South Korea': 'kr', 'Egypt': 'eg', 'Morocco': 'ma', 'Senegal': 'sn',
+                  'Colombia': 'co', 'Uruguay': 'uy', 'Croatia': 'hr', 'Netherlands': 'nl', 'Belgium': 'be'
+                };
+                return m[t] || 'un';
+              };
+
+              let content = <div style={{ fontSize: '13px' }}>{symbol}</div>;
+              if (marker.type === 'city' && marker.team) {
+                content = (
+                  <img 
+                    src={`https://flagcdn.com/w20/${getCode(marker.team)}.png`}
+                    alt={marker.team}
+                    style={{ width: '16px', borderRadius: '2px', objectFit: 'cover' }}
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                  />
+                );
+              }
+
               return (
                 <div
                   key={marker.id}
@@ -277,14 +300,14 @@ export default function MapView({ children, centerCity = "Miami", height = "400p
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '13px',
                       boxShadow: '0 2px 5px rgba(0,0,0,0.5)',
                       transition: 'transform 0.15s ease'
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.25)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                   >
-                    {symbol}
+                    {content}
+                    {marker.type === 'city' && marker.team && <div style={{ display: 'none', fontSize: '13px' }}>⚽</div>}
                   </div>
                 </div>
               );
@@ -298,52 +321,71 @@ export default function MapView({ children, centerCity = "Miami", height = "400p
                   position: 'absolute',
                   bottom: '10px',
                   left: '10px',
-                  right: '10px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  color: '#1a1a2e',
-                  padding: '10px 15px',
+                  width: 'calc(100% - 20px)',
+                  backgroundColor: 'var(--c-surface)',
+                  color: 'var(--c-t1)',
+                  padding: '16px',
                   zIndex: 30,
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                  border: '1px solid #333'
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  border: '1px solid var(--c-border)',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 'bold' }}>
-                    {selectedElement.name || selectedElement.title}
-                  </h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold' }}>
+                      {selectedElement.name || selectedElement.title}
+                    </h4>
+                    {selectedElement.type === 'city' && (
+                      <span style={{ fontSize: '0.85rem', color: 'var(--c-amber)', fontWeight: 'bold' }}>
+                        {selectedElement.stadium}
+                      </span>
+                    )}
+                  </div>
                   <button
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold', color: '#666' }}
+                    style={{ background: 'var(--c-background)', border: '1px solid var(--c-border)', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-t1)' }}
                     onClick={() => setSelectedElement(null)}
                   >
                     ✕
                   </button>
                 </div>
-                <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: '#444' }}>
+                
+                <div style={{ fontSize: '0.9rem', color: 'var(--c-t2)', display: 'grid', gap: '4px' }}>
                   {selectedElement.type === 'hotel' && (
-                    <span>
-                      <strong>Rating:</strong> ⭐ {selectedElement.rating} | <strong>Price:</strong> {'$'.repeat(selectedElement.price_level)} | <strong>Dist:</strong> {selectedElement.distance}
-                      <br />{selectedElement.address}
-                    </span>
+                    <>
+                      <div><strong>Rating:</strong> ⭐ {selectedElement.rating}</div>
+                      <div><strong>Price:</strong> {'$'.repeat(selectedElement.price_level)}</div>
+                      <div><strong>Distance:</strong> {selectedElement.distance}</div>
+                      <div style={{ marginTop: '4px' }}>{selectedElement.address}</div>
+                    </>
                   )}
                   {selectedElement.type === 'food' && (
-                    <span>
-                      <strong>Rating:</strong> ⭐ {selectedElement.rating} | <strong>Category:</strong> {selectedElement.category} | <strong>Price:</strong> {'$'.repeat(selectedElement.price_level)}
-                      <br />{selectedElement.address}
-                    </span>
+                    <>
+                      <div><strong>Rating:</strong> ⭐ {selectedElement.rating}</div>
+                      <div><strong>Category:</strong> {selectedElement.category}</div>
+                      <div><strong>Price:</strong> {'$'.repeat(selectedElement.price_level)}</div>
+                      <div style={{ marginTop: '4px' }}>{selectedElement.address}</div>
+                    </>
                   )}
                   {selectedElement.type === 'city' && (
-                    <span>
-                      <strong>Stadium:</strong> {selectedElement.stadium}
-                      <br /><strong>Date:</strong> {selectedElement.date} | <strong>Match:</strong> {selectedElement.match || 'Group Stage'}
-                    </span>
+                    <>
+                      <div><strong>Match:</strong> {selectedElement.match || 'Group Stage'}</div>
+                      <div><strong>Date:</strong> {selectedElement.date}</div>
+                      <div style={{ marginTop: '8px', padding: '8px', background: 'var(--c-background)', borderRadius: '6px', fontSize: '0.85rem' }}>
+                        Welcome to {selectedElement.city}! Follow {selectedElement.team || 'the team'}'s journey to {selectedElement.stadium}.
+                      </div>
+                    </>
                   )}
                   {selectedElement.type === 'recommended' && (
-                    <span>
-                      <strong>Recommended Stop</strong>
-                      <br /><strong>Stadium:</strong> {selectedElement.stadium || 'Host Stadium'}
-                    </span>
+                    <>
+                      <div><strong>Recommended Stop</strong></div>
+                      <div><strong>Stadium:</strong> {selectedElement.stadium || 'Host Stadium'}</div>
+                    </>
                   )}
-                </p>
+                </div>
               </div>
             )}
 

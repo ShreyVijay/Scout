@@ -33,7 +33,7 @@ def ensure_preferences_index():
 
 def get_user(email: str) -> dict:
     from app.db.mongodb import get_database
-    from app.db.collections import USERS_COLLECTION, SAVED_MISSIONS_COLLECTION
+    from app.db.collections import USERS_COLLECTION
     db = get_database()
     
     # Fetch identity from MongoDB
@@ -56,9 +56,9 @@ def get_user(email: str) -> dict:
             "transport_weight": 0.2
         }
         
-    # Fetch saved missions from MongoDB
-    missions = list(db[SAVED_MISSIONS_COLLECTION].find({"email": email}, {"_id": 0}))
-    user["saved_missions"] = [m["mission_id"] for m in missions]
+    # User mission state
+    user["current_mission"] = user_doc.get("current_mission")
+    user["mission_history"] = user_doc.get("mission_history", [])
     
     return user
 
@@ -70,10 +70,17 @@ def save_user(user: dict) -> dict:
     email = user["email"]
     name = user.get("name", "User")
     
+    update_data = {
+        "email": email, 
+        "name": name,
+        "current_mission": user.get("current_mission"),
+        "mission_history": user.get("mission_history", [])
+    }
+    
     # Save identity to MongoDB
     db[USERS_COLLECTION].update_one(
         {"email": email},
-        {"$set": {"email": email, "name": name}},
+        {"$set": update_data},
         upsert=True
     )
     

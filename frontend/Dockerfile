@@ -6,18 +6,17 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-# We must inject VITE_API_BASE_URL at build time for Vite
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ARG VITE_GOOGLE_MAPS_API_KEY
-ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
+
+# Debug: verify .env.production was copied
+RUN cat .env.production || echo "NO .env.production FOUND"
 
 RUN npm run build
 
+# Verify the build output contains the backend URL
+RUN grep -r "scout-backend" dist/assets/*.js && echo "BACKEND URL FOUND IN BUNDLE" || echo "WARNING: BACKEND URL NOT IN BUNDLE"
+
 FROM nginx:alpine
-# Copy our custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-# Copy built assets
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80

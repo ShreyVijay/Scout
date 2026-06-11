@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createMission } from '../services/api';
+import { useSession } from '../store/useSession';
 
 export default function MissionForm() {
   const navigate = useNavigate();
@@ -26,9 +27,11 @@ export default function MissionForm() {
     setError(null);
 
     try {
+      const email = useSession.getState().email;
       const payload = {
         ...form,
         budget: parseInt(form.budget, 10),
+        email: email
       };
 
       const result = await createMission(payload);

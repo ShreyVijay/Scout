@@ -2,7 +2,7 @@
 import { useContext, useEffect, useRef } from 'react';
 import { MapContext } from './MapView';
 
-export default function ItineraryMap({ stops = [] }) {
+export default function ItineraryMap({ stops = [], team }) {
   const context = useContext(MapContext);
   const markersRef = useRef([]);
   const polylineRef = useRef(null);
@@ -94,7 +94,8 @@ export default function ItineraryMap({ stops = [] }) {
           name: `Stop ${index + 1}: ${stop.city}`,
           stadium: stop.stadium,
           date: stop.date,
-          match: `Tournament Stop #${index + 1}`
+          match: `Tournament Stop #${index + 1}`,
+          team: team
         });
       });
 

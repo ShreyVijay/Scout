@@ -132,7 +132,7 @@ export default function MissionPage() {
         </div>
 
         <div className="map-pane">
-          <ItineraryMap itinerary={itinerary} height="100%" />
+          <ItineraryMap stops={itinerary} team={mission.team} />
         </div>
       </div>
     </div>
