@@ -1,12 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getMission } from '../services/api';
-import MissionCard from '../components/MissionCard';
-import MissionStateCard from '../components/MissionStateCard';
-import BudgetCard from '../components/BudgetCard';
-import MapView from '../components/map/MapView';
-import ItineraryMap from '../components/map/ItineraryMap';
-import { MissionBar, JourneyTimeline, HeroReplanning } from '../components/PitchUI';
+// MissionPage.jsx
+
+import { useState, useEffect, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
+import { getMission } from "../services/api";
+import MissionCard from "../components/MissionCard";
+import MissionStateCard from "../components/MissionStateCard";
+import BudgetCard from "../components/BudgetCard";
+import MapView from "../components/map/MapView";
+import ItineraryMap from "../components/map/ItineraryMap";
+import {
+  MissionBar,
+  JourneyTimeline,
+  HeroReplanning,
+} from "../components/PitchUI";
 
 export default function MissionPage() {
   const { team } = useParams();
@@ -14,29 +20,32 @@ export default function MissionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchMission = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
+  const fetchMission = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      setError(null);
 
-    try {
-      const data = await getMission(team);
-      setMission(data);
-    } catch (err) {
-      if (!silent) {
-        if (err.response?.status === 404) {
-          setError(`Mission not found for team: ${team}`);
-        } else {
-          setError(
-            err.response?.data?.detail ||
-            err.message ||
-            'Failed to load mission'
-          );
+      try {
+        const data = await getMission(team);
+        setMission(data);
+      } catch (err) {
+        if (!silent) {
+          if (err.response?.status === 404) {
+            setError(`Mission not found for team: ${team}`);
+          } else {
+            setError(
+              err.response?.data?.detail ||
+                err.message ||
+                "Failed to load mission",
+            );
+          }
         }
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [team]);
+    },
+    [team],
+  );
 
   useEffect(() => {
     fetchMission();
@@ -74,12 +83,18 @@ export default function MissionPage() {
 
   const itinerary = mission.itinerary || [];
   const history = mission.state_history || [];
-  const isEliminated = mission.tournament_state === 'ELIMINATED' || mission.tournament_state === 'eliminated' || mission.mission_state === 'replanning_required';
+  const isEliminated =
+    mission.tournament_state === "ELIMINATED" ||
+    mission.tournament_state === "eliminated" ||
+    mission.mission_state === "replanning_required";
 
   return (
     <div id="mission-page" className="map-layout">
-      <MissionBar mission={mission} mode={isEliminated ? 'replanning' : 'monitoring'} />
-      
+      <MissionBar
+        mission={mission}
+        mode={isEliminated ? "replanning" : "monitoring"}
+      />
+
       <div className="map-grid">
         <div className="map-sidebar">
           <section className="page-header" style={{ marginTop: 0 }}>
@@ -98,16 +113,24 @@ export default function MissionPage() {
 
           {/* Elimination alert banner */}
           {isEliminated && (
-            <section style={{ marginBottom: '16px' }}>
+            <section style={{ marginBottom: "16px" }}>
               <HeroReplanning
                 team={mission.team}
-                onReplan={() => window.location.href = `/replan/${encodeURIComponent(mission.team)}`}
+                onReplan={() =>
+                  (window.location.href = `/replan/${encodeURIComponent(mission.team)}`)
+                }
                 loading={false}
               />
             </section>
           )}
 
-          <div className="grid-2">
+          <div
+            className=".grid-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}"
+          >
             <MissionCard mission={mission} />
             <MissionStateCard mission={mission} />
           </div>
@@ -129,21 +152,51 @@ export default function MissionPage() {
               <div className="section-title">
                 <h3>Mission Logs</h3>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                }}
+              >
                 {history.map((evt, idx) => (
-                  <div key={idx} style={{ 
-                    padding: '0.75rem', 
-                    background: 'var(--c-surface)', 
-                    borderRadius: '8px',
-                    borderLeft: `2px solid ${evt.state === 'eliminated' ? 'var(--c-red)' : 'var(--c-amber)'}`
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <strong style={{ fontSize: '0.85rem' }}>{evt.state.toUpperCase()}</strong>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--c-t3)' }}>
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "0.75rem",
+                      background: "var(--c-surface)",
+                      borderRadius: "8px",
+                      borderLeft: `2px solid ${evt.state === "eliminated" ? "var(--c-red)" : "var(--c-amber)"}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      <strong style={{ fontSize: "0.85rem" }}>
+                        {evt.state.toUpperCase()}
+                      </strong>
+                      <span
+                        style={{ fontSize: "0.75rem", color: "var(--c-t3)" }}
+                      >
                         {new Date(evt.timestamp).toLocaleDateString()}
                       </span>
                     </div>
-                    {evt.reason && <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--c-t2)' }}>{evt.reason}</p>}
+                    {evt.reason && (
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "0.8rem",
+                          color: "var(--c-t2)",
+                        }}
+                      >
+                        {evt.reason}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -152,7 +205,10 @@ export default function MissionPage() {
         </div>
 
         <div className="map-pane">
-          <MapView centerCity={itinerary[0]?.city || 'Miami'} height="100%">
+          <MapView
+            centerCity={itinerary[0]?.city || "Miami"}
+            height="calc(100vh - 140px)"
+          >
             <ItineraryMap stops={itinerary} team={mission.team} />
           </MapView>
         </div>

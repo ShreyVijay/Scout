@@ -1,3 +1,5 @@
+// MissionStateCard.jsx
+
 export default function MissionStateCard({ mission }) {
   if (!mission) return null;
 

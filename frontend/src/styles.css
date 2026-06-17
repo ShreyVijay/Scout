@@ -1622,3 +1622,24 @@ li {
   }
 }
 
+.map-layout {
+  width: 100%;
+  max-width: none;
+}
+
+.map-grid {
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  gap: 24px;
+  min-height: calc(100vh - 120px);
+}
+
+.map-sidebar {
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+}
+
+.map-pane {
+  min-height: 800px;
+  height: calc(100vh - 120px);
+}

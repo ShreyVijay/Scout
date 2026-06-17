@@ -1,3 +1,5 @@
+// MissionCard.jsx
+
 export default function MissionCard({ mission }) {
   if (!mission) return null;
 
