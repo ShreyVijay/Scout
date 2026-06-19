@@ -47,6 +47,18 @@ export default function OnboardingPage() {
         transport_weight: transport / 100,
       }
     });
+
+    pendo.identify({
+      visitor: {
+        id: email,
+        email: email,
+        full_name: name,
+        atmosphereWeight: atmosphere / 100,
+        budgetWeight: budget / 100,
+        transportWeight: transport / 100,
+      }
+    });
+
     navigate('/dashboard', { replace: true });
   };
 
