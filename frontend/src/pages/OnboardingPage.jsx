@@ -47,6 +47,15 @@ export default function OnboardingPage() {
         transport_weight: transport / 100,
       }
     });
+    if (typeof pendo !== 'undefined') {
+      pendo.track("onboarding_completed", {
+        atmosphere_weight: atmosphere / 100,
+        budget_weight: budget / 100,
+        transport_weight: transport / 100,
+        language: session.language,
+        theme: session.theme,
+      });
+    }
     navigate('/dashboard', { replace: true });
   };
 

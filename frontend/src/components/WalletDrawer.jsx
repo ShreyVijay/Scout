@@ -15,6 +15,13 @@ export default function WalletDrawer({ open, onClose }) {
     const val = parseFloat(amount);
     if (!isNaN(val) && val > 0) {
       addFunds(val);
+      if (typeof pendo !== 'undefined') {
+        pendo.track("wallet_funds_added", {
+          amount: val,
+          new_balance: balance + val,
+          transaction_count: transactions.length + 1,
+        });
+      }
       setAmount('');
       setIsAdding(false);
     }
