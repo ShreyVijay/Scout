@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Drawer } from 'vaul';
 import { sendScoutChat } from '../services/api';
 import { useSession } from '../store/useSession';
 import { t } from '../i18n';
 
+const AGENT_ID = 'ZCGWNn059JnqfKFlqHay__kLkZE';
+
 export default function ScoutChat({ open, onOpen, onClose }) {
   const language = useSession((state) => state.language);
   const name = useSession((state) => state.name);
+  const conversationId = useRef(crypto.randomUUID());
 
   const starterPrompts = [
     t('chat.prompt_watch', language) || 'What should I watch before my next match?',
@@ -25,7 +28,7 @@ export default function ScoutChat({ open, onOpen, onClose }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function sendMessage(text = input) {
+  async function sendMessage(text = input, isSuggested = false) {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
 
@@ -33,6 +36,16 @@ export default function ScoutChat({ open, onOpen, onClose }) {
     setMessages(nextMessages);
     setInput('');
     setLoading(true);
+
+    if (window.pendo && window.pendo.trackAgent) {
+      window.pendo.trackAgent('prompt', {
+        agentId: AGENT_ID,
+        conversationId: conversationId.current,
+        messageId: crypto.randomUUID(),
+        content: trimmed,
+        suggestedPrompt: isSuggested,
+      });
+    }
 
     try {
       const response = await sendScoutChat({
@@ -44,10 +57,21 @@ export default function ScoutChat({ open, onOpen, onClose }) {
           user_name: name,
         },
       });
+      const replyText = response.reply || 'I checked the current skaut context.';
       setMessages([
         ...nextMessages,
-        { role: 'assistant', text: response.reply || 'I checked the current skaut context.' },
+        { role: 'assistant', text: replyText },
       ]);
+
+      if (window.pendo && window.pendo.trackAgent) {
+        window.pendo.trackAgent('agent_response', {
+          agentId: AGENT_ID,
+          conversationId: conversationId.current,
+          messageId: crypto.randomUUID(),
+          content: replyText,
+          modelUsed: 'gemini-2.5-flash',
+        });
+      }
     } catch (error) {
       setMessages([
         ...nextMessages,
@@ -93,7 +117,7 @@ export default function ScoutChat({ open, onOpen, onClose }) {
 
             <div className="chat-prompts">
               {starterPrompts.map((prompt) => (
-                <button key={prompt} type="button" onClick={() => sendMessage(prompt)}>
+                <button key={prompt} type="button" onClick={() => sendMessage(prompt, true)}>
                   {prompt}
                 </button>
               ))}
