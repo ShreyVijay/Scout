@@ -105,6 +105,21 @@ export default function ReplanningPage() {
           buses: busRes.buses || [],
           tickets: ticketRes.tickets || [],
         });
+        if (typeof pendo !== 'undefined') {
+          pendo.track("replanning_generated", {
+            team,
+            recommended_city: recCity,
+            recommended_match: matchName,
+            recommendation_rank: data.recommendation?.rank,
+            recommendation_score: data.recommendation?.final_score || data.recommendation?.score,
+            candidate_source: data.recommendation?.candidate_source,
+            start_city: startCity,
+            flights_count: (flightRes.flights || []).length,
+            hotels_count: (hotelRes.hotels || []).length,
+            buses_count: (busRes.buses || []).length,
+            tickets_count: (ticketRes.tickets || []).length,
+          });
+        }
       }
     } catch (err) {
       if (err.response?.status === 404) {
@@ -135,6 +150,17 @@ export default function ReplanningPage() {
       if (!saved.some((rec) => rec.city === newRec.city && rec.team === newRec.team)) {
         saved.push(newRec);
         localStorage.setItem('saved_recommendations', JSON.stringify(saved));
+        if (typeof pendo !== 'undefined') {
+          pendo.track("recommendation_saved", {
+            team,
+            city: newRec.city,
+            match: newRec.match,
+            final_score: newRec.final_score || newRec.score,
+            candidate_source: newRec.candidate_source,
+            rank: newRec.rank,
+            saved_recommendations_count: saved.length,
+          });
+        }
       }
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);

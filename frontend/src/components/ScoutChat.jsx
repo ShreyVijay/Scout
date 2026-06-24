@@ -34,6 +34,8 @@ export default function ScoutChat({ open, onOpen, onClose }) {
     setInput('');
     setLoading(true);
 
+    let hadError = false;
+    let responseAction = null;
     try {
       const response = await sendScoutChat({
         message: trimmed,
@@ -44,11 +46,13 @@ export default function ScoutChat({ open, onOpen, onClose }) {
           user_name: name,
         },
       });
+      responseAction = response?.action || null;
       setMessages([
         ...nextMessages,
         { role: 'assistant', text: response.reply || 'I checked the current skaut context.' },
       ]);
     } catch (error) {
+      hadError = true;
       setMessages([
         ...nextMessages,
         {
@@ -57,6 +61,17 @@ export default function ScoutChat({ open, onOpen, onClose }) {
         },
       ]);
     } finally {
+      if (typeof pendo !== 'undefined') {
+        pendo.track("ai_chat_message_sent", {
+          message_length: trimmed.length,
+          is_starter_prompt: starterPrompts.includes(trimmed),
+          surface: window.location.pathname,
+          language,
+          saved_recommendations_count: JSON.parse(localStorage.getItem('saved_recommendations') || '[]').length,
+          response_action: responseAction,
+          had_error: hadError,
+        });
+      }
       setLoading(false);
     }
   }

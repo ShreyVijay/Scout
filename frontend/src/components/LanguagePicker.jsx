@@ -14,11 +14,18 @@ export default function LanguagePicker() {
 
   const handleSelect = (e) => {
     const newLang = e.target.value;
+    const previousLang = language;
     setLanguage(newLang);
     if (newLang === 'ar') {
       document.documentElement.dir = 'rtl';
     } else {
       document.documentElement.dir = 'ltr';
+    }
+    if (typeof pendo !== 'undefined') {
+      pendo.track("language_changed", {
+        previous_language: previousLang,
+        new_language: newLang,
+      });
     }
   };
 

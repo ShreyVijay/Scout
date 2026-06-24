@@ -102,9 +102,17 @@ export default function DashboardPage() {
   const savedRecsCount = savedRecs.length;
 
   function removeRecommendation(index) {
+    const removed = savedRecs[index];
     const updated = savedRecs.filter((_, i) => i !== index);
     localStorage.setItem('saved_recommendations', JSON.stringify(updated));
     setSavedRecs(updated);
+    if (typeof pendo !== 'undefined') {
+      pendo.track("recommendation_removed", {
+        city: removed?.city,
+        team: removed?.team,
+        remaining_recommendations_count: updated.length,
+      });
+    }
   }
 
   // Determine current mission and its state
